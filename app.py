@@ -2,7 +2,7 @@ import streamlit as st
 import datetime
 import pytz
 
-# --- Aufgabenplan ---
+# Aufgabenplan
 wochentag_saetze = {
     "Montag": "Heute ist die Fächerdesi dran! 1-6",
     "Dienstag": "Heute ist die BZ Kontrolle + Fächerdesi 7-11 dran",
@@ -23,7 +23,6 @@ tage_uebersetzung = {
     "Sunday": "Sonntag"
 }
 
-# --- Feiertage 2025 in Deutschland ---
 feiertage_2025 = {
     "01.01.2025": "Neujahrstag",
     "06.01.2025": "Heilige Drei Könige",
@@ -42,53 +41,33 @@ feiertage_2025 = {
     "26.12.2025": "2. Weihnachtstag"
 }
 
-# --- Streamlit Setup ---
-st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
-st.title("🚑 RTW Tagesaufgaben")
-
-# --- Aktuelle Uhrzeit ---
 def get_current_time():
     timezone = pytz.timezone('Europe/Berlin')
-    current_time = datetime.datetime.now(timezone).strftime('%H:%M:%S')
-    return current_time
+    return datetime.datetime.now(timezone).strftime('%H:%M:%S')
 
-# --- Heute bestimmen ---
 heute_en = datetime.datetime.now().strftime('%A')
 heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
-
-# --- Feiertag prüfen ---
 heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
-feiertag_heute = feiertage_2025.get(heute_str, None)
+feiertag_heute = feiertage_2025.get(heute_str)
 
-# --- Sonnenaufgang und Sonnenuntergang für heute ---
-# (Daten manuell eingetragen oder aus einer zuverlässigen Quelle entnommen)
 sonnenaufgang = "05:17"
 sonnenuntergang = "21:43"
 
-# --- Sidebar mit Tabelle ---
-st.sidebar.header("📅 Aktuelle Informationen")
-st.sidebar.table({
-    "Aktuelle Uhrzeit": [get_current_time()],
-    "Sonnenaufgang": [sonnenaufgang],
-    "Sonnenuntergang": [sonnenuntergang],
-    "Feiertag": [feiertag_heute if feiertag_heute else "Kein Feiertag"]
-})
+st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
+st.title("🚑 RTW Tagesaufgaben")
 
-# --- Aufgabenübersicht ---
-st.subheader(f"Heute ist {heute_deutsch}:")
+st.subheader(f"📅 Heute ist {heute_deutsch}:")
 st.success(wochentag_saetze.get(heute_deutsch, "Kein Satz für heute definiert."))
 
-# --- Auswahl anderer Tag ---
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag:", list(wochentag_saetze.keys()))
 st.write(f"📝 Aufgabe für **{tag_auswahl}**:")
 st.info(wochentag_saetze[tag_auswahl])
 
-# --- Zusatzinfos unten anzeigen ---
+# Nur hier unten die Zusatzinfos anzeigen
 st.markdown("---")
 st.markdown("### 🌤️ Zusätzliche Tagesinfos")
-
-info_col1, info_col2, info_col3, info_col4 = st.columns(4)
-info_col1.metric("Aktuelle Uhrzeit", get_current_time())
-info_col2.metric("Sonnenaufgang", sonnenaufgang)
-info_col3.metric("Sonnenuntergang", sonnenuntergang)
-info_col4.metric("Feiertag", feiertag_heute if feiertag_heute else "—")
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("🕒 Uhrzeit", get_current_time())
+col2.metric("🌅 Sonnenaufgang", sonnenaufgang)
+col3.metric("🌇 Sonnenuntergang", sonnenuntergang)
+col4.metric("🎉 Feiertag", feiertag_heute if feiertag_heute else "—")
