@@ -82,3 +82,13 @@ st.success(wochentag_saetze.get(heute_deutsch, "Kein Satz für heute definiert."
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag:", list(wochentag_saetze.keys()))
 st.write(f"📝 Aufgabe für **{tag_auswahl}**:")
 st.info(wochentag_saetze[tag_auswahl])
+
+# --- Zusatzinfos unten anzeigen ---
+st.markdown("---")
+st.markdown("### 🌤️ Zusätzliche Tagesinfos")
+
+info_col1, info_col2, info_col3, info_col4 = st.columns(4)
+info_col1.metric("Aktuelle Uhrzeit", get_current_time())
+info_col2.metric("Sonnenaufgang", sonnenaufgang)
+info_col3.metric("Sonnenuntergang", sonnenuntergang)
+info_col4.metric("Feiertag", feiertag_heute if feiertag_heute else "—")
