@@ -2,13 +2,13 @@ import streamlit as st
 import datetime
 
 wochentag_saetze = {
-    "Montag": "Heute ist die Faecherdesi dran!",
-    "Dienstag": "Heute ist die BZ Kontrolle dran ✅",
-    "Mittwoch": "Heute ist die Innen Desi dran",
-    "Donnerstag": "Heute wird das Auto gewaschen",
-    "Freitag": "Heute wird O2 Schlauch und Fingertipp gewechselt",
-    "Samstag": "Heute findest du bestimmt noch was zu tun",
-    "Sonntag": "Grillen, Chillen, Kasten Killen"
+    "Montag": "Heute ist die Fächerdesi dran! 1-6",
+    "Dienstag": "Heute ist die BZ Kontrolle + Fächerdesi 7-11 dran",
+    "Mittwoch": "Heute ist die Innenraumdesi dran",
+    "Donnerstag": "Heute wird das Auto gewaschen und die Garage gereinigt",
+    "Freitag": "Heute wird Fach 12-18 desinfiziert, Zusätzlich Betriebsmittelkontrolle und O2 Schlauch + Fingertipp gewechselt",
+    "Samstag": "Heute wird Fach 20-21 desinfiziert",
+    "Sonntag": "Heute wird die Küche gereinigt"
 }
 
 tage_uebersetzung = {
