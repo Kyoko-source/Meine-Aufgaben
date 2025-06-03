@@ -60,8 +60,11 @@ st.subheader(f"📅 Heute ist {heute_deutsch}:")
 st.success(wochentag_saetze.get(heute_deutsch, "Kein Satz für heute definiert."))
 
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag:", list(wochentag_saetze.keys()))
-st.write(f"📝 Aufgabe für **{tag_auswahl}**:")
-st.info(wochentag_saetze[tag_auswahl])
+
+if tag_auswahl != heute_deutsch:
+    st.write(f"📝 Aufgabe für **{tag_auswahl}**:")
+    st.info(wochentag_saetze[tag_auswahl])
+
 
 # Nur hier unten die Zusatzinfos anzeigen
 st.markdown("---")
