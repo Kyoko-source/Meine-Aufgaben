@@ -7,7 +7,7 @@ wochentag_saetze = {
     "Mittwoch": "Heute ist die Innenraumdesi dran",
     "Donnerstag": "Heute wird das Auto gewaschen und die Garage gereinigt",
     "Freitag": "Heute wird Fach 12-18 desinfiziert, Zusätzlich Betriebsmittelkontrolle und O2 Schlauch + Fingertipp gewechselt",
-    "Samstag": "Heute wird Fach 20-21 desinfiziert",
+    "Samstag": "Heute wird Fach 20-22 desinfiziert",
     "Sonntag": "Heute wird die Küche gereinigt"
 }
 
