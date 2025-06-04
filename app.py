@@ -145,7 +145,7 @@ if tag_auswahl != "—":
         for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
             aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
 
-# Zusatzinfos
+
 st.markdown("---")
 st.markdown("### 🌤️ Zusätzliche Tagesinfos")
 col1, col2, col3, col4 = st.columns(4)
