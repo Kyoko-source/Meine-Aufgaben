@@ -61,28 +61,21 @@ def get_current_time():
     return datetime.datetime.now(timezone).strftime('%H:%M:%S')
 
 def lade_status():
-    """Lädt den gespeicherten Status aus JSON, oder gibt leeres Dict zurück."""
     if os.path.exists(STATUS_DATEI):
         with open(STATUS_DATEI, "r") as f:
             return json.load(f)
     return {}
 
 def speichere_status(status_dict):
-    """Speichert den Status in der JSON Datei."""
     with open(STATUS_DATEI, "w") as f:
         json.dump(status_dict, f)
 
 def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
-    """Zeigt Checkbox und speichert/liest den Status mit farbiger Anzeige."""
     jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
     key = f"{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}"
 
     checked = status_dict.get(key, False)
-
-    # Checkbox mit Label, dabei den Text farbig + durchgestrichen wenn gecheckt
-    label_html = f"<span style='color:green; text-decoration: line-through;'>{aufgabe} ✅</span>" if checked else aufgabe
-
-    neu_gesetzt = st.checkbox(label_html, value=checked, key=key, unsafe_allow_html=True)
+    neu_gesetzt = st.checkbox("", value=checked, key=key)
 
     if neu_gesetzt != checked:
         status_dict[key] = neu_gesetzt
@@ -90,54 +83,53 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
         if neu_gesetzt:
             st.balloons()
 
-# --- Hauptprogramm ---
+    if neu_gesetzt:
+        st.markdown(f"<span style='color:green; text-decoration: line-through;'>{aufgabe} ✅</span>", unsafe_allow_html=True)
+    else:
+        st.markdown(aufgabe)
 
-# Aktuelles Datum und Wochentag
+# Streamlit Setup
+st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
+
+# Aktuelles Datum & Tag
 heute_en = datetime.datetime.now().strftime('%A')
 heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
 heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
 feiertag_heute = feiertage_2025.get(heute_str)
 
-# Sonneninfos (optional statisch)
+# Sonneninfos statisch
 sonnenaufgang = "05:17"
 sonnenuntergang = "21:43"
 
-# Lade gespeicherten Status
+# Status laden
 status_dict = lade_status()
 
-# Streamlit Page Setup
-st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
-# Aufgabenbereich für den aktuellen Tag
+# Aufgaben für heute nebeneinander
 st.markdown("## ✅ Aufgaben für heute")
 col_ktw, col_rtw = st.columns(2)
-
 with col_ktw:
-    st.write("### 🧾 Aufgaben KTW")
+    st.write("### 🚑 Aufgaben KTW")
     for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict)
-
 with col_rtw:
     st.write("### 🚑 Aufgaben RTW")
     for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict)
 
-# Wochentags-Auswahl
+# Auswahl anderer Tag
 st.markdown("---")
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
-# Aufgaben für anderen Tag nur anzeigen, wenn sinnvoll gewählt
 if tag_auswahl != "—" and tag_auswahl != heute_deutsch:
     st.markdown(f"## 🔄 Aufgaben für {tag_auswahl}")
     col_ktw_alt, col_rtw_alt = st.columns(2)
-
     with col_ktw_alt:
-        st.write("### 🧾 Aufgaben KTW")
+        st.write("### 🚑 Aufgaben KTW")
         for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
             aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
-
     with col_rtw_alt:
         st.write("### 🚑 Aufgaben RTW")
         for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
@@ -151,3 +143,40 @@ col1.metric("🕒 Uhrzeit", get_current_time())
 col2.metric("🌅 Sonnenaufgang", sonnenaufgang)
 col3.metric("🌇 Sonnenuntergang", sonnenuntergang)
 col4.metric("🎉 Feiertag", feiertag_heute if feiertag_heute else "Kein Feiertag heute 😟")
+
+# Chatfunktion mit Name und aufklappbarem Chatfenster
+if 'chat_name' not in st.session_state:
+    st.session_state.chat_name = ""
+
+if st.session_state.chat_name == "":
+    if st.button("💬 Chat starten"):
+        st.session_state.show_chat_input = True
+
+if st.session_state.get("show_chat_input", False) and st.session_state.chat_name == "":
+    name = st.text_input("Bitte gib deinen Namen für den Chat ein (frei erfunden):", max_chars=20)
+    if st.button("Name bestätigen"):
+        if name.strip():
+            st.session_state.chat_name = name.strip()
+            st.session_state.show_chat_input = False
+
+if st.session_state.chat_name != "":
+    if st.button("💬 Chat öffnen/schließen"):
+        st.session_state.show_chat = not st.session_state.get("show_chat", False)
+
+    if st.session_state.get("show_chat", False):
+        st.markdown(f"### Chat mit {st.session_state.chat_name}")
+        chat_placeholder = st.empty()
+
+        if 'chat_messages' not in st.session_state:
+            st.session_state.chat_messages = []
+
+        with st.form(key="chat_form", clear_on_submit=True):
+            user_msg = st.text_input("Deine Nachricht:")
+            submit = st.form_submit_button("Senden")
+
+            if submit and user_msg.strip():
+                st.session_state.chat_messages.append((st.session_state.chat_name, user_msg.strip()))
+
+        for sender, msg in st.session_state.chat_messages:
+            st.markdown(f"**{sender}:** {msg}")
+
