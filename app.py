@@ -83,11 +83,11 @@ st.write("### 🚑 Aufgaben RTW")
 for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
     st.checkbox(f"{aufgabe}", key=f"rtw_{heute_deutsch}_{aufgabe}")
 
-# Auswahl anderer Tage
 st.markdown("---")
-tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", list(tage_uebersetzung.values()))
+tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
-if tag_auswahl != heute_deutsch:
+# Aufgaben nur anzeigen, wenn ein anderer Wochentag als heute ausgewählt wurde
+if tag_auswahl != "—" and tag_auswahl != heute_deutsch:
     st.markdown(f"## 🔄 Aufgaben für {tag_auswahl}")
     st.write("### 🧾 Aufgaben KTW")
     for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
@@ -96,6 +96,7 @@ if tag_auswahl != heute_deutsch:
     st.write("### 🚑 Aufgaben RTW")
     for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
         st.checkbox(f"{aufgabe}", key=f"rtw_{tag_auswahl}_{aufgabe}")
+
 
 # Zusatzinfos
 st.markdown("---")
