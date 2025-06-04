@@ -6,7 +6,6 @@ import os
 
 # Datei zum Speichern der Checkbox-Zustände
 STATUS_DATEI = "status.json"
-STREAK_DATEI = "streak.json"  # Streak wird auch gespeichert
 
 # Aufgabenlisten KTW und RTW
 aufgaben_ktw = {
@@ -73,18 +72,6 @@ def speichere_status(status_dict):
     with open(STATUS_DATEI, "w") as f:
         json.dump(status_dict, f)
 
-def lade_streak():
-    """Lädt den aktuellen Streak aus der Datei."""
-    if os.path.exists(STREAK_DATEI):
-        with open(STREAK_DATEI, "r") as f:
-            return json.load(f)
-    return {"current_streak": 0, "last_date": ""}
-
-def speichere_streak(streak_dict):
-    """Speichert den Streak in der Datei."""
-    with open(STREAK_DATEI, "w") as f:
-        json.dump(streak_dict, f)
-
 def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
     """Zeigt Checkbox und speichert/liest den Status."""
     jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
@@ -94,7 +81,7 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
     checked = status_dict.get(key, False)
 
     # Checkbox anzeigen, mit dem geladenen Status als default
-    neu_gesetzt = st.checkbox(f"{aufgabe}", value=checked, key=key)
+    neu_gesetzt = st.checkbox("", value=checked, key=key)
 
     # Falls Status sich ändert, aktualisiere dict und speichere
     if neu_gesetzt != checked:
@@ -109,48 +96,18 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
     else:
         st.markdown(aufgabe)
 
-def berechne_streak(status_dict, heute_deutsch):
-    """Berechnet den aktuellen Streak basierend auf dem Status und speichert ihn."""
-    jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
-
-    # Überprüfen, ob alle Aufgaben abgehakt wurden
-    alle_abgehakt = all(
-        status_dict.get(f"{heute_deutsch}_{jahr}_{kalenderwoche}_{aufgabe}", False)
-        for aufgabe in aufgaben_ktw.get(heute_deutsch, []) + aufgaben_rtw.get(heute_deutsch, [])
-    )
-
-    streak_dict = lade_streak()
-    if alle_abgehakt:
-        if streak_dict["last_date"] == heute_deutsch:  # Wenn der Streak am selben Tag wiederholt wird
-            streak_dict["current_streak"] += 1
-        else:  # Wenn der Streak neu gestartet wird
-            streak_dict["current_streak"] = 1
-        streak_dict["last_date"] = heute_deutsch
-    else:
-        streak_dict["current_streak"] = 0
-        streak_dict["last_date"] = ""
-
-    speichere_streak(streak_dict)
-    return streak_dict["current_streak"]
-
 # Aktuelles Datum und Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
 heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
 heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
 feiertag_heute = feiertage_2025.get(heute_str)
 
-# Sonneninfos (optional statisch)
-sonnenaufgang = "05:17"
-sonnenuntergang = "21:43"
-
 # Lade gespeicherten Status
 status_dict = lade_status()
 
-# Streamlit Page Setup - MUST BE FIRST
-st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
-
 # Streamlit Page Setup
-st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔", anchor="center")
+st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
+st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
 # Aufgabenbereich für den aktuellen Tag
@@ -167,22 +124,42 @@ with col_rtw:
     for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict)
 
-# Berechne und zeige den Streak
-current_streak = berechne_streak(status_dict, heute_deutsch)
-st.markdown(f"### 📈 Dein Streak: {current_streak} Tage hintereinander alle Aufgaben abgehakt")
-
-# Zusätzliche Tagesinfos: Uhrzeit, Sonnenaufgang, Sonnenuntergang, Feiertag
-st.markdown("---")
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("🕒 Uhrzeit", get_current_time())
-col2.metric("🌅 Sonnenaufgang", sonnenaufgang)
-col3.metric("🌇 Sonnenuntergang", sonnenuntergang)
-col4.metric("🎉 Feiertag", feiertag_heute if feiertag_heute else "Kein Feiertag heute 😟")
-
 # Wochentags-Auswahl
 st.markdown("---")
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
 # Aufgaben für anderen Tag nur anzeigen, wenn sinnvoll gewählt
 if tag_auswahl != "—":
-    st.write(f"### Aufgaben für
+    st.write(f"### Aufgaben für {tag_auswahl}")
+
+    # Aufgaben für den ausgewählten Tag anzeigen
+    col_ktw, col_rtw = st.columns(2)
+    
+    with col_ktw:
+        st.write("### 🧾 Aufgaben KTW")
+        for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
+            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
+    
+    with col_rtw:
+        st.write("### 🚑 Aufgaben RTW")
+        for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
+            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
+
+# Zusatzinfos
+st.markdown("---")
+st.markdown("### 🌤️ Zusätzliche Tagesinfos")
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("🕒 Uhrzeit", get_current_time())
+col2.metric("🎉 Feiertag", feiertag_heute if feiertag_heute else "Kein Feiertag heute 😟")
+
+# Berechnung des Streaks (Tage hintereinander alle Aufgaben abgehakt)
+streak = 0
+for i in range(1, 8):  # Maximal 7 Tage zurückschauen (eine Woche)
+    tag_vorher = (datetime.datetime.now() - datetime.timedelta(days=i)).strftime('%A')
+    if all(status_dict.get(f"{tage_uebersetzung.get(tag_vorher)}_{jahr}_{kalenderwoche}_{aufgabe}", False) for aufgabe in aufgaben_ktw.get(tag_vorher, []) + aufgaben_rtw.get(tag_vorher, [])):
+        streak += 1
+    else:
+        break
+
+# Anzeige des Streaks
+st.markdown(f"### 📊 Dein Streak: {streak} Tage hintereinander alle Aufgaben abgehakt! 🎉")
