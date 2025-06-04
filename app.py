@@ -2,15 +2,25 @@ import streamlit as st
 import datetime
 import pytz
 
-# Aufgabenplan
-wochentag_saetze = {
-    "Montag": "Heute ist die Fächerdesi dran! 1-6",
-    "Dienstag": "Heute ist die BZ Kontrolle + Fächerdesi 7-11 dran",
-    "Mittwoch": "Heute ist die Innenraumdesi dran",
-    "Donnerstag": "Heute wird das Auto gewaschen und die Garage gereinigt",
-    "Freitag": "Heute wird Fach 12-18 desinfiziert, Zusätzlich Betriebsmittelkontrolle und O2 Schlauch + Fingertipp gewechselt",
-    "Samstag": "Heute wird Fach 20-22 desinfiziert",
-    "Sonntag": "Heute wird die Küche gereinigt"
+# Aufgabenlisten KTW und RTW
+aufgaben_ktw = {
+    "Montag": ["Fächerdesi 1-3", "Fächerdesi 4-6"],
+    "Dienstag": ["BZ Kontrolle", "Fächerdesi 7-11"],
+    "Mittwoch": ["Innenraumdesi KTW"],
+    "Donnerstag": ["Auto waschen (KTW)", "Garage reinigen"],
+    "Freitag": ["Fach 12-15 desinfizieren", "Betriebsmittelkontrolle"],
+    "Samstag": ["Fach 20-21 desinfizieren"],
+    "Sonntag": ["Küche reinigen (KTW)"]
+}
+
+aufgaben_rtw = {
+    "Montag": ["Fächerdesi RTW 1-6"],
+    "Dienstag": ["RTW Ausstattung prüfen", "O2 Flasche checken"],
+    "Mittwoch": ["Innenraumdesi RTW"],
+    "Donnerstag": ["Auto waschen (RTW)", "Garage reinigen RTW"],
+    "Freitag": ["Fach 16-18 desinfizieren", "O2 Schlauch + Fingertipp wechseln"],
+    "Samstag": ["Fach 22 desinfizieren"],
+    "Sonntag": ["Küche reinigen (RTW)"]
 }
 
 tage_uebersetzung = {
@@ -45,28 +55,49 @@ def get_current_time():
     timezone = pytz.timezone('Europe/Berlin')
     return datetime.datetime.now(timezone).strftime('%H:%M:%S')
 
+# Aktuelles Datum und Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
 heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
 heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
 feiertag_heute = feiertage_2025.get(heute_str)
 
+# Sonneninfos (optional statisch)
 sonnenaufgang = "05:17"
 sonnenuntergang = "21:43"
 
+# Streamlit Page Setup
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 st.title("🚑 RTW Tagesaufgaben")
+st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
-st.subheader(f"📅 Heute ist {heute_deutsch}:")
-st.success(wochentag_saetze.get(heute_deutsch, "Kein Satz für heute definiert."))
+# Aufgabenbereich für den aktuellen Tag
+st.markdown("## ✅ Aufgaben für heute")
 
-tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag:", list(wochentag_saetze.keys()))
+# KTW Aufgaben
+st.write("### 🧾 Aufgaben KTW")
+for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
+    st.checkbox(f"{aufgabe}", key=f"ktw_{heute_deutsch}_{aufgabe}")
+
+# RTW Aufgaben
+st.write("### 🚑 Aufgaben RTW")
+for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
+    st.checkbox(f"{aufgabe}", key=f"rtw_{heute_deutsch}_{aufgabe}")
+
+# Auswahl anderer Tage
+st.markdown("---")
+tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", list(tage_uebersetzung.values()))
 
 if tag_auswahl != heute_deutsch:
-    st.write(f"📝 Aufgabe für **{tag_auswahl}**:")
-    st.info(wochentag_saetze[tag_auswahl])
+    st.markdown(f"## 🔄 Aufgaben für {tag_auswahl}")
+    st.write("### 🧾 Aufgaben KTW")
+    for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
+        st.checkbox(f"{aufgabe}", key=f"ktw_{tag_auswahl}_{aufgabe}")
 
+    st.write("### 🚑 Aufgaben RTW")
+    for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
+        st.checkbox(f"{aufgabe}", key=f"rtw_{tag_auswahl}_{aufgabe}")
 
-# Nur hier unten die Zusatzinfos anzeigen
+# Zusatzinfos
 st.markdown("---")
 st.markdown("### 🌤️ Zusätzliche Tagesinfos")
 col1, col2, col3, col4 = st.columns(4)
