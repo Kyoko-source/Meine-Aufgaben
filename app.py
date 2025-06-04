@@ -67,7 +67,7 @@ sonnenuntergang = "21:43"
 
 # Streamlit Page Setup
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
-st.title("🚑 RTW Tagesaufgaben")
+st.title("✔Rettungswache Südlohn Tagesaufgaben✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
 # Aufgabenbereich für den aktuellen Tag
