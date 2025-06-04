@@ -4,23 +4,23 @@ import pytz
 
 # Aufgabenlisten KTW und RTW
 aufgaben_ktw = {
-    "Montag": ["Fächerdesi 1-3", "Fächerdesi 4-6"],
-    "Dienstag": ["BZ Kontrolle", "Fächerdesi 7-11"],
+    "Montag": ["Fächerdesi 1-6", "Umkleide Bad SW-Bereich reinigen"],
+    "Dienstag": ["BZ Kontrolle", "Fächerdesi 7-8", "BZ Messung"],
     "Mittwoch": ["Innenraumdesi KTW"],
     "Donnerstag": ["Auto waschen (KTW)", "Garage reinigen"],
-    "Freitag": ["Fach 12-15 desinfizieren", "Betriebsmittelkontrolle"],
-    "Samstag": ["Fach 20-21 desinfizieren"],
-    "Sonntag": ["Küche reinigen (KTW)"]
+    "Freitag": ["Betriebsmittelkontrolle", "O2 Schlauch + Fingertipp wechseln"],
+    "Samstag": ["Wäsche gemacht?"],
+    "Sonntag": ["Küche reinigen alle Fronten"]
 }
 
 aufgaben_rtw = {
-    "Montag": ["Fächerdesi RTW 1-6"],
-    "Dienstag": ["RTW Ausstattung prüfen", "O2 Flasche checken"],
+    "Montag": ["Fächerdesi 1-6", "Umkleide Bad SW-Bereich reinigen"],
+    "Dienstag": ["BZ Kontrolle", "Fächerdesi 7-11"],
     "Mittwoch": ["Innenraumdesi RTW"],
-    "Donnerstag": ["Auto waschen (RTW)", "Garage reinigen RTW"],
-    "Freitag": ["Fach 16-18 desinfizieren", "O2 Schlauch + Fingertipp wechseln"],
-    "Samstag": ["Fach 22 desinfizieren"],
-    "Sonntag": ["Küche reinigen (RTW)"]
+    "Donnerstag": ["Auto waschen (RTW)", "Garage reinigen", "Betriebsmittelkontrolle"],
+    "Freitag": ["Fach 12-18 desinfizieren", "O2 Schlauch + Fingertipp wechseln", "Betriebsmittel Kontrolle"],
+    "Samstag": ["Fach 20-22 desinfizieren"],
+    "Sonntag": ["Küche reinigen alle Fronten"]
 }
 
 tage_uebersetzung = {
