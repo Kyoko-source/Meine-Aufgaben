@@ -3,6 +3,7 @@ import datetime
 import pytz
 import json
 import os
+import hashlib
 
 # Datei zum Speichern der Checkbox-Zustände
 STATUS_DATEI = "status.json"
@@ -75,22 +76,20 @@ def speichere_status(status_dict):
 def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
     """Zeigt Checkbox und speichert/liest den Status."""
     jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
-    key = f"{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}_{str(datetime.datetime.now())}"  # Einzigartiger Schlüssel
 
-    # Status vorher aus dict lesen
-    checked = status_dict.get(key, False)
+    # Stabiler, eindeutiger Schlüssel
+    raw_key = f"{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}"
+    key_hash = hashlib.md5(raw_key.encode()).hexdigest()
 
-    # Checkbox anzeigen, mit dem geladenen Status als default
-    neu_gesetzt = st.checkbox("", value=checked, key=key)
+    checked = status_dict.get(key_hash, False)
+    neu_gesetzt = st.checkbox("", value=checked, key=key_hash)
 
-    # Falls Status sich ändert, aktualisiere dict und speichere
     if neu_gesetzt != checked:
-        status_dict[key] = neu_gesetzt
+        status_dict[key_hash] = neu_gesetzt
         speichere_status(status_dict)
         if neu_gesetzt:
             st.balloons()
 
-    # Aufgabe als Text mit Style je nach Status
     if neu_gesetzt:
         st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe} </span>", unsafe_allow_html=True)
     else:
@@ -128,11 +127,9 @@ with col_rtw:
 st.markdown("---")
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
-# Aufgaben für anderen Tag nur anzeigen, wenn sinnvoll gewählt
 if tag_auswahl != "—":
     st.write(f"### Aufgaben für {tag_auswahl}")
 
-    # Aufgaben für den ausgewählten Tag anzeigen
     col_ktw, col_rtw = st.columns(2)
     
     with col_ktw:
@@ -144,7 +141,6 @@ if tag_auswahl != "—":
         st.write("### 🚑 Aufgaben RTW")
         for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
             aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
-
 
 st.markdown("---")
 st.markdown("### 🌤️ Zusätzliche Tagesinfos")
