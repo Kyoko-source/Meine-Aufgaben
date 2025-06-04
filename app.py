@@ -4,8 +4,9 @@ import pytz
 import json
 import os
 
-# Datei zum Speichern der Checkbox-Zustände
+# Datei zum Speichern der Checkbox-Zustände und Notizen
 STATUS_DATEI = "status.json"
+NOTIZEN_DATEI = "notizen.json"
 
 # Aufgabenlisten KTW und RTW
 aufgaben_ktw = {
@@ -60,41 +61,90 @@ def get_current_time():
     timezone = pytz.timezone('Europe/Berlin')
     return datetime.datetime.now(timezone).strftime('%H:%M:%S')
 
-def lade_status():
-    """Lädt den gespeicherten Status aus JSON, oder gibt leeres Dict zurück."""
-    if os.path.exists(STATUS_DATEI):
-        with open(STATUS_DATEI, "r") as f:
+def lade_json_datei(datei_name):
+    if os.path.exists(datei_name):
+        with open(datei_name, "r") as f:
             return json.load(f)
     return {}
 
-def speichere_status(status_dict):
-    """Speichert den Status in der JSON Datei."""
-    with open(STATUS_DATEI, "w") as f:
-        json.dump(status_dict, f)
+def speichere_json_datei(datei_name, data):
+    with open(datei_name, "w") as f:
+        json.dump(data, f)
 
-def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
-    """Zeigt Checkbox und speichert/liest den Status."""
+def aufgabe_mit_feedback_und_notiz(aufgabe, wochentag, status_dict, notizen_dict):
+    """Checkbox, Textfarbe, Linie & kleine Notiz speichern/anzeigen."""
     jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
     key = f"{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}"
 
-    # Status vorher aus dict lesen
     checked = status_dict.get(key, False)
+    notiz = notizen_dict.get(key, "")
 
-    # Checkbox anzeigen, mit dem geladenen Status als default
-    neu_gesetzt = st.checkbox("", value=checked, key=key)
+    col1, col2 = st.columns([0.1, 0.9])
+    with col1:
+        neu_gesetzt = st.checkbox("", value=checked, key=key)
+    with col2:
+        # Text mit Stil
+        if neu_gesetzt:
+            st.markdown(f"<span style='color:green; text-decoration: line-through;'>{aufgabe} ✅</span>", unsafe_allow_html=True)
+        else:
+            st.markdown(aufgabe)
+        # Notizfeld
+        neue_notiz = st.text_area("Notiz:", value=notiz, key=f"notiz_{key}", height=50)
 
-    # Falls Status sich ändert, aktualisiere dict und speichere
+    # Änderungen speichern
     if neu_gesetzt != checked:
         status_dict[key] = neu_gesetzt
-        speichere_status(status_dict)
+        speichere_json_datei(STATUS_DATEI, status_dict)
         if neu_gesetzt:
             st.balloons()
+    if neue_notiz != notiz:
+        notizen_dict[key] = neue_notiz
+        speichere_json_datei(NOTIZEN_DATEI, notizen_dict)
 
-    # Aufgabe als Text mit Style je nach Status
-    if neu_gesetzt:
-        st.markdown(f"<span style='color:green; text-decoration: line-through;'>{aufgabe} ✅</span>", unsafe_allow_html=True)
+# -------------------- CHAT --------------------
+
+# Chat-Nachrichten im Session State halten
+if "chat_nachrichten" not in st.session_state:
+    st.session_state.chat_nachrichten = []
+
+if "chat_nickname" not in st.session_state:
+    st.session_state.chat_nickname = None
+
+if "chat_visible" not in st.session_state:
+    st.session_state.chat_visible = False
+
+def zeige_chat():
+    st.markdown("## 💬 Team Chat")
+
+    # Nickname setzen, wenn noch keiner
+    if st.session_state.chat_nickname is None:
+        nick = st.text_input("Gib deinen Nickname ein (frei erfunden):", key="nickname_input")
+        if nick.strip() != "":
+            st.session_state.chat_nickname = nick.strip()
+            st.experimental_rerun()
+
     else:
-        st.markdown(aufgabe)
+        # Chat anzeigen
+        for msg in st.session_state.chat_nachrichten:
+            zeit = msg["zeit"]
+            nick = msg["nick"]
+            text = msg["text"]
+            st.markdown(f"**[{zeit}] {nick}:** {text}")
+
+        # Neue Nachricht
+        neue_msg = st.text_input("Nachricht schreiben:", key="chat_input")
+
+        if st.button("Senden"):
+            if neue_msg.strip() != "":
+                jetzt = datetime.datetime.now().strftime("%H:%M:%S")
+                st.session_state.chat_nachrichten.append({
+                    "zeit": jetzt,
+                    "nick": st.session_state.chat_nickname,
+                    "text": neue_msg.strip()
+                })
+                st.experimental_rerun()
+
+# ----------------- Hauptseite -----------------
 
 # Aktuelles Datum und Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
@@ -106,46 +156,50 @@ feiertag_heute = feiertage_2025.get(heute_str)
 sonnenaufgang = "05:17"
 sonnenuntergang = "21:43"
 
-# Lade gespeicherten Status
-status_dict = lade_status()
+# Lade gespeicherten Status und Notizen
+status_dict = lade_json_datei(STATUS_DATEI)
+notizen_dict = lade_json_datei(NOTIZEN_DATEI)
 
-# Streamlit Page Setup
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
-# Aufgabenbereich für den aktuellen Tag
 st.markdown("## ✅ Aufgaben für heute")
 col_ktw, col_rtw = st.columns(2)
 
 with col_ktw:
-    st.write("### 🧾 Aufgaben KTW")
+    st.write("### 🚑 Aufgaben KTW")
     for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
-        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict)
+        aufgabe_mit_feedback_und_notiz(aufgabe, heute_deutsch, status_dict, notizen_dict)
 
 with col_rtw:
     st.write("### 🚑 Aufgaben RTW")
     for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
-        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict)
+        aufgabe_mit_feedback_und_notiz(aufgabe, heute_deutsch, status_dict, notizen_dict)
 
-# Wochentags-Auswahl
 st.markdown("---")
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
-# Aufgaben für anderen Tag nur anzeigen, wenn sinnvoll gewählt
 if tag_auswahl != "—" and tag_auswahl != heute_deutsch:
     st.markdown(f"## 🔄 Aufgaben für {tag_auswahl}")
     col_ktw_alt, col_rtw_alt = st.columns(2)
-
     with col_ktw_alt:
-        st.write("### 🧾 Aufgaben KTW")
+        st.write("### 🚑 Aufgaben KTW")
         for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
-            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
-
+            aufgabe_mit_feedback_und_notiz(aufgabe, tag_auswahl, status_dict, notizen_dict)
     with col_rtw_alt:
         st.write("### 🚑 Aufgaben RTW")
         for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
-            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
+            aufgabe_mit_feedback_und_notiz(aufgabe, tag_auswahl, status_dict, notizen_dict)
+
+# Chat Icon zum Ein-/Ausklappen
+chat_col1, chat_col2, chat_col3, chat_col4, chat_col5 = st.columns([0.8,0.05,0.05,0.05,0.05])
+with chat_col5:
+    if st.button("💬"):
+        st.session_state.chat_visible = not st.session_state.chat_visible
+
+if st.session_state.chat_visible:
+    zeige_chat()
 
 # Zusatzinfos
 st.markdown("---")
