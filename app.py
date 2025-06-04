@@ -196,4 +196,4 @@ speichere_status(status_dict)
 # Zusatzinfos
 st.markdown("---")
 st.markdown("### 🌤️ Zusätzliche Tagesinfos")
-col1, col2, col3, col4 = st.columns(
+col1,
