@@ -1,6 +1,11 @@
 import streamlit as st
 import datetime
 import pytz
+import json
+import os
+
+# Datei zum Speichern der Checkbox-Zustände
+STATUS_DATEI = "status.json"
 
 # Aufgabenlisten KTW und RTW
 aufgaben_ktw = {
@@ -55,13 +60,39 @@ def get_current_time():
     timezone = pytz.timezone('Europe/Berlin')
     return datetime.datetime.now(timezone).strftime('%H:%M:%S')
 
-def aufgabe_mit_feedback(aufgabe, wochentag):
+def lade_status():
+    """Lädt den gespeicherten Status aus JSON, oder gibt leeres Dict zurück."""
+    if os.path.exists(STATUS_DATEI):
+        with open(STATUS_DATEI, "r") as f:
+            return json.load(f)
+    return {}
+
+def speichere_status(status_dict):
+    """Speichert den Status in der JSON Datei."""
+    with open(STATUS_DATEI, "w") as f:
+        json.dump(status_dict, f)
+
+def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
+    """Zeigt Checkbox und speichert/liest den Status."""
     jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
     key = f"{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}"
-    checked = st.checkbox("", key=key)
-    if checked:
+
+    # Status vorher aus dict lesen
+    checked = status_dict.get(key, False)
+
+    # Checkbox anzeigen, mit dem geladenen Status als default
+    neu_gesetzt = st.checkbox("", value=checked, key=key)
+
+    # Falls Status sich ändert, aktualisiere dict und speichere
+    if neu_gesetzt != checked:
+        status_dict[key] = neu_gesetzt
+        speichere_status(status_dict)
+        if neu_gesetzt:
+            st.balloons()
+
+    # Aufgabe als Text mit Style je nach Status
+    if neu_gesetzt:
         st.markdown(f"<span style='color:green; text-decoration: line-through;'>{aufgabe} ✅</span>", unsafe_allow_html=True)
-        st.balloons()
     else:
         st.markdown(aufgabe)
 
@@ -75,6 +106,9 @@ feiertag_heute = feiertage_2025.get(heute_str)
 sonnenaufgang = "05:17"
 sonnenuntergang = "21:43"
 
+# Lade gespeicherten Status
+status_dict = lade_status()
+
 # Streamlit Page Setup
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
@@ -87,12 +121,12 @@ col_ktw, col_rtw = st.columns(2)
 with col_ktw:
     st.write("### 🧾 Aufgaben KTW")
     for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
-        aufgabe_mit_feedback(aufgabe, heute_deutsch)
+        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict)
 
 with col_rtw:
     st.write("### 🚑 Aufgaben RTW")
     for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
-        aufgabe_mit_feedback(aufgabe, heute_deutsch)
+        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict)
 
 # Wochentags-Auswahl
 st.markdown("---")
@@ -106,12 +140,12 @@ if tag_auswahl != "—" and tag_auswahl != heute_deutsch:
     with col_ktw_alt:
         st.write("### 🧾 Aufgaben KTW")
         for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
-            aufgabe_mit_feedback(aufgabe, tag_auswahl)
+            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
 
     with col_rtw_alt:
         st.write("### 🚑 Aufgaben RTW")
         for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
-            aufgabe_mit_feedback(aufgabe, tag_auswahl)
+            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
 
 # Zusatzinfos
 st.markdown("---")
