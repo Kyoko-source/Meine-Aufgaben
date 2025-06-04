@@ -92,9 +92,9 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
 
     # Aufgabe als Text mit Style je nach Status
     if neu_gesetzt:
-        st.markdown(f"<span style='color:green; text-decoration: line-through;'>{aufgabe} ✅</span>", unsafe_allow_html=True)
+        st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe} </span>", unsafe_allow_html=True)
     else:
-        st.markdown(aufgabe)
+        st.markdown(f"<span style='color:red;'>⏳ {aufgabe} </span>", unsafe_allow_html=True)
 
 # Aktuelles Datum und Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
@@ -107,6 +107,30 @@ status_dict = lade_status()
 
 # Streamlit Page Setup
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
+
+# Dunkelmodus-Auswahl
+mode = st.selectbox("🌙 Wähle deinen Modus:", ["Helles Design", "Dunkles Design"])
+
+if mode == "Dunkles Design":
+    st.markdown(
+        """
+        <style>
+            body {
+                background-color: #1E1E1E;
+                color: white;
+            }
+            .stCheckbox {
+                background-color: #444444;
+            }
+            .st-balloons {
+                background-color: #333333;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+# Seite Inhalt
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
