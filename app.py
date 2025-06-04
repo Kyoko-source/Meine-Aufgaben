@@ -78,13 +78,13 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, readonly=False):
     checked = status_dict.get(key_hash, False)
 
     if readonly:
-        # Nur Anzeige ohne Interaktion
+        # Nur Anzeige – keine Checkbox, kein Key-Konflikt
         if checked:
-            st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe} </span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
         else:
-            st.markdown(f"<span style='color:red;'>⏳ {aufgabe} </span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
     else:
-        # Interaktive Checkbox
+        # Interaktive Checkbox mit Speicherfunktion
         neu_gesetzt = st.checkbox("", value=checked, key=key_hash)
         if neu_gesetzt != checked:
             status_dict[key_hash] = neu_gesetzt
@@ -93,9 +93,9 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, readonly=False):
                 st.balloons()
 
         if neu_gesetzt:
-            st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe} </span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
         else:
-            st.markdown(f"<span style='color:red;'>⏳ {aufgabe} </span>", unsafe_allow_html=True)
+            st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
 
 # Aktuelles Datum und Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
@@ -106,7 +106,7 @@ feiertag_heute = feiertage_2025.get(heute_str)
 # Lade gespeicherten Status
 status_dict = lade_status()
 
-# Streamlit-Seitenkonfiguration
+# Streamlit-Konfiguration
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
@@ -125,7 +125,7 @@ with col_rtw:
     for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, readonly=False)
 
-# Dropdown zur Ansicht anderer Wochentage
+# Dropdown für andere Tage
 st.markdown("---")
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
