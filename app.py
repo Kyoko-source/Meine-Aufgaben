@@ -184,4 +184,5 @@ st.markdown("---")
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
 # Aufgaben für anderen Tag nur anzeigen, wenn sinnvoll gewählt
-if tag_auswahl != "—" and tag_aus
+if tag_auswahl != "—":
+    st.write(f"### Aufgaben für
