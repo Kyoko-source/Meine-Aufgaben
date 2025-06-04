@@ -75,7 +75,7 @@ def speichere_status(status_dict):
 def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
     """Zeigt Checkbox und speichert/liest den Status."""
     jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
-    key = f"{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}"
+    key = f"{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}_{str(datetime.datetime.now())}"  # Einzigartiger Schlüssel
 
     # Status vorher aus dict lesen
     checked = status_dict.get(key, False)
@@ -107,30 +107,6 @@ status_dict = lade_status()
 
 # Streamlit Page Setup
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
-
-# Dunkelmodus-Auswahl
-mode = st.selectbox("🌙 Wähle deinen Modus:", ["Helles Design", "Dunkles Design"])
-
-if mode == "Dunkles Design":
-    st.markdown(
-        """
-        <style>
-            body {
-                background-color: #1E1E1E;
-                color: white;
-            }
-            .stCheckbox {
-                background-color: #444444;
-            }
-            .st-balloons {
-                background-color: #333333;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-# Seite Inhalt
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
