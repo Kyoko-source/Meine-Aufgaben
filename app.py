@@ -6,6 +6,7 @@ import os
 
 # Datei zum Speichern der Checkbox-Zustände
 STATUS_DATEI = "status.json"
+STREAK_DATEI = "streak.json"  # Streak wird auch gespeichert
 
 # Aufgabenlisten KTW und RTW
 aufgaben_ktw = {
@@ -72,6 +73,18 @@ def speichere_status(status_dict):
     with open(STATUS_DATEI, "w") as f:
         json.dump(status_dict, f)
 
+def lade_streak():
+    """Lädt den aktuellen Streak aus der Datei."""
+    if os.path.exists(STREAK_DATEI):
+        with open(STREAK_DATEI, "r") as f:
+            return json.load(f)
+    return {"current_streak": 0, "last_date": ""}
+
+def speichere_streak(streak_dict):
+    """Speichert den Streak in der Datei."""
+    with open(STREAK_DATEI, "w") as f:
+        json.dump(streak_dict, f)
+
 def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
     """Zeigt Checkbox und speichert/liest den Status."""
     jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
@@ -95,6 +108,30 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
         st.markdown(f"<span style='color:green; text-decoration: line-through;'>{aufgabe} ✅</span>", unsafe_allow_html=True)
     else:
         st.markdown(aufgabe)
+
+def berechne_streak(status_dict, heute_deutsch):
+    """Berechnet den aktuellen Streak basierend auf dem Status und speichert ihn."""
+    jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
+
+    # Überprüfen, ob alle Aufgaben abgehakt wurden
+    alle_abgehakt = all(
+        status_dict.get(f"{heute_deutsch}_{jahr}_{kalenderwoche}_{aufgabe}", False)
+        for aufgabe in aufgaben_ktw.get(heute_deutsch, []) + aufgaben_rtw.get(heute_deutsch, [])
+    )
+
+    streak_dict = lade_streak()
+    if alle_abgehakt:
+        if streak_dict["last_date"] == heute_deutsch:  # Wenn der Streak am selben Tag wiederholt wird
+            streak_dict["current_streak"] += 1
+        else:  # Wenn der Streak neu gestartet wird
+            streak_dict["current_streak"] = 1
+        streak_dict["last_date"] = heute_deutsch
+    else:
+        streak_dict["current_streak"] = 0
+        streak_dict["last_date"] = ""
+
+    speichere_streak(streak_dict)
+    return streak_dict["current_streak"]
 
 # Aktuelles Datum und Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
@@ -130,21 +167,14 @@ with col_rtw:
     for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict)
 
+# Zusätzliche Tagesinfos: Uhrzeit, Sonnenaufgang, Sonnenuntergang, Feiertag
+st.markdown("---")
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("🕒 Uhrzeit", get_current_time())
+col2.metric("🌅 Sonnenaufgang", sonnenaufgang)
+col3.metric("🌇 Sonnenuntergang", sonnenuntergang)
+col4.metric("🎉 Feiertag", feiertag_heute if feiertag_heute else "Kein Feiertag heute 😟")
+
 # Wochentags-Auswahl
 st.markdown("---")
-tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
-
-# Aufgaben für anderen Tag nur anzeigen, wenn sinnvoll gewählt
-if tag_auswahl != "—" and tag_auswahl != heute_deutsch:
-    st.markdown(f"## 🔄 Aufgaben für {tag_auswahl}")
-    col_ktw_alt, col_rtw_alt = st.columns(2)
-
-    with col_ktw_alt:
-        st.write("### 🧾 Aufgaben KTW")
-        for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
-            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
-
-    with col_rtw_alt:
-        st.write("### 🚑 Aufgaben RTW")
-        for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
-            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
+tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung
