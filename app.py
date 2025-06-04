@@ -151,15 +151,3 @@ st.markdown("### 🌤️ Zusätzliche Tagesinfos")
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("🕒 Uhrzeit", get_current_time())
 col2.metric("🎉 Feiertag", feiertag_heute if feiertag_heute else "Kein Feiertag heute 😟")
-
-# Berechnung des Streaks (Tage hintereinander alle Aufgaben abgehakt)
-streak = 0
-for i in range(1, 8):  # Maximal 7 Tage zurückschauen (eine Woche)
-    tag_vorher = (datetime.datetime.now() - datetime.timedelta(days=i)).strftime('%A')
-    if all(status_dict.get(f"{tage_uebersetzung.get(tag_vorher)}_{jahr}_{kalenderwoche}_{aufgabe}", False) for aufgabe in aufgaben_ktw.get(tag_vorher, []) + aufgaben_rtw.get(tag_vorher, [])):
-        streak += 1
-    else:
-        break
-
-# Anzeige des Streaks
-st.markdown(f"### 📊 Dein Streak: {streak} Tage hintereinander alle Aufgaben abgehakt! 🎉")
