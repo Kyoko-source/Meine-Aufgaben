@@ -4,7 +4,7 @@ import pytz
 import json
 import os
 
-# Datei zum Speichern der Checkbox-Zustände und des Streak-Systems
+# Datei zum Speichern der Checkbox-Zustände
 STATUS_DATEI = "status.json"
 
 # Aufgabenlisten KTW und RTW
@@ -81,7 +81,7 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
     checked = status_dict.get(key, False)
 
     # Checkbox anzeigen, mit dem geladenen Status als default
-    neu_gesetzt = st.checkbox(aufgabe, value=checked, key=key)
+    neu_gesetzt = st.checkbox(f"{aufgabe}", value=checked, key=key)
 
     # Falls Status sich ändert, aktualisiere dict und speichere
     if neu_gesetzt != checked:
@@ -109,13 +109,53 @@ sonnenuntergang = "21:43"
 # Lade gespeicherten Status
 status_dict = lade_status()
 
-# Aktuellen Streak und Level laden
-streak = status_dict.get("streak", 0)
-level = status_dict.get("level", 0)
+# Belohnungssystem: Streak und Level
+jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
+heute_key_ktw_rtw = [f"{heute_deutsch}_{jahr}_{kalenderwoche}_{aufgabe}" for aufgabe in aufgaben_ktw.get(heute_deutsch, []) + aufgaben_rtw.get(heute_deutsch, [])]
+
+# Überprüfen, ob alle Aufgaben für den heutigen Tag erledigt sind (alle Checkboxen sind angehakt)
+streak = 0
+level = 0
+if all(status_dict.get(key, False) for key in heute_key_ktw_rtw):
+    streak += 1
+else:
+    streak = 0
+
+# Wenn 3 Tage in Folge alles erledigt wurden, Level erhöhen
+if streak == 3:
+    level += 1
+    streak = 0  # Reset streak after level up
+
+# Set Level based on streaks
+if level <= 5:
+    level_title = "Anfänger"
+    level_color = "orange"
+elif 5 < level <= 10:
+    level_title = "Richtig angefangen"
+    level_color = "orange"
+elif 10 < level <= 15:
+    level_title = "Routine"
+    level_color = "green"
+elif 15 < level <= 20:
+    level_title = "Profi"
+    level_color = "blue"
+elif 20 < level <= 50:
+    level_title = "Keine halben Sachen"
+    level_color = "purple"
+elif 50 < level <= 100:
+    level_title = "Senior"
+    level_color = "black"
+else:
+    level_title = "Perfektionist"
+    level_color = "pink"
+
+# Anzeigen des Levelbalkens
+st.markdown(f"## 🎯 Dein aktueller Level: **{level}** - {level_title}")
+st.markdown(f"<div style='height: 20px; background-color: {level_color}; width: {level}%'></div>", unsafe_allow_html=True)
 
 # Streamlit Page Setup
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
-st.title("✔️ Rettungswache Südlohn Tagesaufgaben ✔️", anchor="center")
+st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔", anchor="center")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
 # Aufgabenbereich für den aktuellen Tag
@@ -151,49 +191,3 @@ if tag_auswahl != "—" and tag_auswahl != heute_deutsch:
         for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
             aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
 
-# Belohnungssystem: Streak und Level
-if all(status_dict.get(f"{heute_deutsch}_{jahr}_{kalenderwoche}_{aufgabe}", False) for aufgabe in aufgaben_ktw.get(heute_deutsch, []) + aufgaben_rtw.get(heute_deutsch, [])):
-    streak += 1
-else:
-    streak = 0
-
-if streak == 3:
-    level += 1
-    streak = 0  # Reset streak after level up
-
-# Set Level based on streaks
-if level <= 5:
-    level_title = "Anfänger"
-    level_color = "orange"
-elif 5 < level <= 10:
-    level_title = "Richtig angefangen"
-    level_color = "orange"
-elif 10 < level <= 15:
-    level_title = "Routine"
-    level_color = "green"
-elif 15 < level <= 20:
-    level_title = "Profi"
-    level_color = "blue"
-elif 20 < level <= 50:
-    level_title = "Keine halben Sachen"
-    level_color = "purple"
-elif 50 < level <= 100:
-    level_title = "Senior"
-    level_color = "black"
-else:
-    level_title = "Perfektionist"
-    level_color = "pink"
-
-# Anzeigen des Levelbalkens
-st.markdown(f"## 🎯 Dein aktueller Level: **{level}** - {level_title}")
-st.markdown(f"<div style='height: 20px; background-color: {level_color}; width: {level}%'></div>", unsafe_allow_html=True)
-
-# Speichern des Status
-status_dict["streak"] = streak
-status_dict["level"] = level
-speichere_status(status_dict)
-
-# Zusatzinfos
-st.markdown("---")
-st.markdown("### 🌤️ Zusätzliche Tagesinfos")
-col1,
