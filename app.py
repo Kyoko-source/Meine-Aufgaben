@@ -4,6 +4,9 @@ import pytz
 import json
 import os
 
+# Streamlit Page Setup - MUST BE FIRST
+st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
+
 # Datei zum Speichern der Checkbox-Zustände
 STATUS_DATEI = "status.json"
 
@@ -154,7 +157,6 @@ st.markdown(f"## 🎯 Dein aktueller Level: **{level}** - {level_title}")
 st.markdown(f"<div style='height: 20px; background-color: {level_color}; width: {level}%'></div>", unsafe_allow_html=True)
 
 # Streamlit Page Setup
-st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔", anchor="center")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
@@ -184,10 +186,5 @@ if tag_auswahl != "—" and tag_auswahl != heute_deutsch:
     with col_ktw_alt:
         st.write("### 🧾 Aufgaben KTW")
         for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
-            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
-
-    with col_rtw_alt:
-        st.write("### 🚑 Aufgaben RTW")
-        for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
             aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
 
