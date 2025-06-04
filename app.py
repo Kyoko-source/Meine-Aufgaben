@@ -67,36 +67,41 @@ sonnenuntergang = "21:43"
 
 # Streamlit Page Setup
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
-st.title("✔Rettungswache Südlohn Tagesaufgaben✔")
+st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
 # Aufgabenbereich für den aktuellen Tag
 st.markdown("## ✅ Aufgaben für heute")
+col_ktw, col_rtw = st.columns(2)
 
-# KTW Aufgaben
-st.write("### 🧾 Aufgaben KTW")
-for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
-    st.checkbox(f"{aufgabe}", key=f"ktw_{heute_deutsch}_{aufgabe}")
+with col_ktw:
+    st.write("### 🧾 Aufgaben KTW")
+    for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
+        st.checkbox(f"{aufgabe}", key=f"ktw_{heute_deutsch}_{aufgabe}")
 
-# RTW Aufgaben
-st.write("### 🚑 Aufgaben RTW")
-for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
-    st.checkbox(f"{aufgabe}", key=f"rtw_{heute_deutsch}_{aufgabe}")
+with col_rtw:
+    st.write("### 🚑 Aufgaben RTW")
+    for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
+        st.checkbox(f"{aufgabe}", key=f"rtw_{heute_deutsch}_{aufgabe}")
 
+# Wochentags-Auswahl
 st.markdown("---")
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
-# Aufgaben nur anzeigen, wenn ein anderer Wochentag als heute ausgewählt wurde
+# Aufgaben für anderen Tag nur anzeigen, wenn sinnvoll gewählt
 if tag_auswahl != "—" and tag_auswahl != heute_deutsch:
     st.markdown(f"## 🔄 Aufgaben für {tag_auswahl}")
-    st.write("### 🧾 Aufgaben KTW")
-    for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
-        st.checkbox(f"{aufgabe}", key=f"ktw_{tag_auswahl}_{aufgabe}")
+    col_ktw_alt, col_rtw_alt = st.columns(2)
 
-    st.write("### 🚑 Aufgaben RTW")
-    for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
-        st.checkbox(f"{aufgabe}", key=f"rtw_{tag_auswahl}_{aufgabe}")
+    with col_ktw_alt:
+        st.write("### 🧾 Aufgaben KTW")
+        for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
+            st.checkbox(f"{aufgabe}", key=f"ktw_{tag_auswahl}_{aufgabe}")
 
+    with col_rtw_alt:
+        st.write("### 🚑 Aufgaben RTW")
+        for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
+            st.checkbox(f"{aufgabe}", key=f"rtw_{tag_auswahl}_{aufgabe}")
 
 # Zusatzinfos
 st.markdown("---")
