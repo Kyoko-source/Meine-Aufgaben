@@ -167,6 +167,10 @@ with col_rtw:
     for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict)
 
+# Berechne und zeige den Streak
+current_streak = berechne_streak(status_dict, heute_deutsch)
+st.markdown(f"### 📈 Dein Streak: {current_streak} Tage hintereinander alle Aufgaben abgehakt")
+
 # Zusätzliche Tagesinfos: Uhrzeit, Sonnenaufgang, Sonnenuntergang, Feiertag
 st.markdown("---")
 col1, col2, col3, col4 = st.columns(4)
@@ -177,4 +181,7 @@ col4.metric("🎉 Feiertag", feiertag_heute if feiertag_heute else "Kein Feierta
 
 # Wochentags-Auswahl
 st.markdown("---")
-tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung
+tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
+
+# Aufgaben für anderen Tag nur anzeigen, wenn sinnvoll gewählt
+if tag_auswahl != "—" and tag_aus
