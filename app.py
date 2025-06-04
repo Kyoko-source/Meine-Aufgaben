@@ -55,6 +55,14 @@ def get_current_time():
     timezone = pytz.timezone('Europe/Berlin')
     return datetime.datetime.now(timezone).strftime('%H:%M:%S')
 
+def aufgabe_mit_feedback(aufgabe, key):
+    checked = st.checkbox("", key=key)
+    if checked:
+        st.markdown(f"<span style='color:green; text-decoration: line-through;'>{aufgabe} ✅</span>", unsafe_allow_html=True)
+        st.balloons()
+    else:
+        st.markdown(aufgabe)
+
 # Aktuelles Datum und Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
 heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
@@ -77,12 +85,12 @@ col_ktw, col_rtw = st.columns(2)
 with col_ktw:
     st.write("### 🧾 Aufgaben KTW")
     for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
-        st.checkbox(f"{aufgabe}", key=f"ktw_{heute_deutsch}_{aufgabe}")
+        aufgabe_mit_feedback(aufgabe, key=f"ktw_{heute_deutsch}_{aufgabe}")
 
 with col_rtw:
     st.write("### 🚑 Aufgaben RTW")
     for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
-        st.checkbox(f"{aufgabe}", key=f"rtw_{heute_deutsch}_{aufgabe}")
+        aufgabe_mit_feedback(aufgabe, key=f"rtw_{heute_deutsch}_{aufgabe}")
 
 # Wochentags-Auswahl
 st.markdown("---")
@@ -96,12 +104,12 @@ if tag_auswahl != "—" and tag_auswahl != heute_deutsch:
     with col_ktw_alt:
         st.write("### 🧾 Aufgaben KTW")
         for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
-            st.checkbox(f"{aufgabe}", key=f"ktw_{tag_auswahl}_{aufgabe}")
+            aufgabe_mit_feedback(aufgabe, key=f"ktw_{tag_auswahl}_{aufgabe}")
 
     with col_rtw_alt:
         st.write("### 🚑 Aufgaben RTW")
         for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
-            st.checkbox(f"{aufgabe}", key=f"rtw_{tag_auswahl}_{aufgabe}")
+            aufgabe_mit_feedback(aufgabe, key=f"rtw_{tag_auswahl}_{aufgabe}")
 
 # Zusatzinfos
 st.markdown("---")
