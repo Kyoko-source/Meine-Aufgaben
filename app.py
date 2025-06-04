@@ -61,75 +61,90 @@ def get_current_time():
     return datetime.datetime.now(timezone).strftime('%H:%M:%S')
 
 def lade_status():
+    """Lädt den gespeicherten Status aus JSON, oder gibt leeres Dict zurück."""
     if os.path.exists(STATUS_DATEI):
         with open(STATUS_DATEI, "r") as f:
             return json.load(f)
     return {}
 
 def speichere_status(status_dict):
+    """Speichert den Status in der JSON Datei."""
     with open(STATUS_DATEI, "w") as f:
         json.dump(status_dict, f)
 
 def aufgabe_mit_feedback(aufgabe, wochentag, status_dict):
+    """Zeigt Checkbox und speichert/liest den Status."""
     jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
     key = f"{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}"
 
+    # Status vorher aus dict lesen
     checked = status_dict.get(key, False)
+
+    # Checkbox anzeigen, mit dem geladenen Status als default
     neu_gesetzt = st.checkbox("", value=checked, key=key)
 
+    # Falls Status sich ändert, aktualisiere dict und speichere
     if neu_gesetzt != checked:
         status_dict[key] = neu_gesetzt
         speichere_status(status_dict)
         if neu_gesetzt:
             st.balloons()
 
+    # Aufgabe als Text mit Style je nach Status
     if neu_gesetzt:
         st.markdown(f"<span style='color:green; text-decoration: line-through;'>{aufgabe} ✅</span>", unsafe_allow_html=True)
     else:
         st.markdown(aufgabe)
 
-# Streamlit Setup
-st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
-
-# Aktuelles Datum & Tag
+# Aktuelles Datum und Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
 heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
 heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
 feiertag_heute = feiertage_2025.get(heute_str)
 
-# Sonneninfos statisch
+# Sonneninfos (optional statisch)
 sonnenaufgang = "05:17"
 sonnenuntergang = "21:43"
 
-# Status laden
+# Lade gespeicherten Status
 status_dict = lade_status()
 
-st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
+# Streamlit Page Setup
+st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
+
+# Zentrierter Titel mit Markdown und HTML
+st.markdown("<h1 style='text-align:center;'>✔ Rettungswache Südlohn Tagesaufgaben ✔</h1>", unsafe_allow_html=True)
+
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
-# Aufgaben für heute nebeneinander
+# Aufgabenbereich für den aktuellen Tag
 st.markdown("## ✅ Aufgaben für heute")
 col_ktw, col_rtw = st.columns(2)
+
 with col_ktw:
-    st.write("### 🚑 Aufgaben KTW")
+    st.write("### 🧾 Aufgaben KTW")
     for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict)
+
 with col_rtw:
     st.write("### 🚑 Aufgaben RTW")
     for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict)
 
-# Auswahl anderer Tag
+# Wochentags-Auswahl
 st.markdown("---")
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
+# Aufgaben für anderen Tag nur anzeigen, wenn sinnvoll gewählt
 if tag_auswahl != "—" and tag_auswahl != heute_deutsch:
     st.markdown(f"## 🔄 Aufgaben für {tag_auswahl}")
     col_ktw_alt, col_rtw_alt = st.columns(2)
+
     with col_ktw_alt:
-        st.write("### 🚑 Aufgaben KTW")
+        st.write("### 🧾 Aufgaben KTW")
         for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
             aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict)
+
     with col_rtw_alt:
         st.write("### 🚑 Aufgaben RTW")
         for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
