@@ -5,7 +5,7 @@ import json
 import os
 import hashlib
 
-# Passwortabfrage (wie zuvor, zentriert)
+# Passwortabfrage (zentriert & gestylt)
 def check_password():
     def password_entered():
         if st.session_state["password"] == "RettSüd15":
@@ -24,7 +24,6 @@ def check_password():
 
 check_password()
 
-# Statusdatei & Aufgaben wie gehabt
 STATUS_DATEI = "status.json"
 
 aufgaben_ktw = {
@@ -91,37 +90,10 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=Fal
         else:
             st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
 
-# Hilfsfunktion für Boxen mit Styling
-def box(title, content_func, border_color="#ccc", bg_color="#f9f9f9"):
-    st.markdown(f"""
-        <div style="
-            border: 2px solid {border_color};
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            background: {bg_color};
-            box-shadow: 2px 2px 6px rgba(0,0,0,0.1);
-        ">
-            <h3 style="margin-top:0;">{title}</h3>
-        </div>
-    """, unsafe_allow_html=True)
-    content_func()
-
-# Box-Inhalte definieren
-def show_ktw():
-    for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
-        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="KTW", readonly=False)
-
-def show_rtw():
-    for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
-        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="RTW", readonly=False)
-
-# Aktuelles Datum + Tag
 heute_en = datetime.datetime.now().strftime('%A')
 heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
 heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
 
-# Status laden
 status_dict = lade_status()
 
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
@@ -133,31 +105,33 @@ col_ktw, col_rtw = st.columns(2)
 
 with col_ktw:
     st.markdown("""
-    <div style="border: 2px solid #555; border-radius: 10px; padding: 10px; background: #e0e0e0;">
-    <h3>🧾 Aufgaben KTW</h3>
+    <div style="border: 2px solid #2e7d32; border-radius: 10px; padding: 15px; background: #e8f5e9;">
+    <h3 style="color:#2e7d32;">🧾 Aufgaben KTW</h3>
     """, unsafe_allow_html=True)
-    show_ktw()
+    for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
+        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="KTW", readonly=False)
     st.markdown("</div>", unsafe_allow_html=True)
 
 with col_rtw:
     st.markdown("""
-    <div style="border: 2px solid #2196F3; border-radius: 10px; padding: 10px; background: #e3f2fd;">
-    <h3>🚑 Aufgaben RTW</h3>
+    <div style="border: 2px solid #1976d2; border-radius: 10px; padding: 15px; background: #e3f2fd;">
+    <h3 style="color:#1976d2;">🚑 Aufgaben RTW</h3>
     """, unsafe_allow_html=True)
-    show_rtw()
+    for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
+        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="RTW", readonly=False)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Dropdown für andere Tage (readonly Ansicht)
 st.markdown("---")
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
 if tag_auswahl != "—":
     st.write(f"### 🔎 Aufgaben für {tag_auswahl}")
     col_ktw, col_rtw = st.columns(2)
+
     with col_ktw:
         st.markdown("""
-        <div style="border: 2px solid #555; border-radius: 10px; padding: 10px; background: #e0e0e0;">
-        <h3>🧾 Aufgaben KTW</h3>
+        <div style="border: 2px solid #2e7d32; border-radius: 10px; padding: 15px; background: #e8f5e9;">
+        <h3 style="color:#2e7d32;">🧾 Aufgaben KTW</h3>
         """, unsafe_allow_html=True)
         for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
             aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="KTW", readonly=True)
@@ -165,14 +139,14 @@ if tag_auswahl != "—":
 
     with col_rtw:
         st.markdown("""
-        <div style="border: 2px solid #2196F3; border-radius: 10px; padding: 10px; background: #e3f2fd;">
-        <h3>🚑 Aufgaben RTW</h3>
+        <div style="border: 2px solid #1976d2; border-radius: 10px; padding: 15px; background: #e3f2fd;">
+        <h3 style="color:#1976d2;">🚑 Aufgaben RTW</h3>
         """, unsafe_allow_html=True)
         for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
             aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="RTW", readonly=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# Optional: zusätzliche Tagesinfos
+# Optional Tagesinfos
 st.markdown("---")
 def get_current_time():
     timezone = pytz.timezone('Europe/Berlin')
@@ -196,7 +170,6 @@ feiertage_2025 = {
     "26.12.2025": "2. Weihnachtstag"
 }
 
-heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
 feiertag_heute = feiertage_2025.get(heute_str)
 
 col1, col2, col3, col4 = st.columns(4)
