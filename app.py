@@ -5,7 +5,7 @@ import json
 import os
 import hashlib
 
-# 🔒 Passwortabfrage (zentriert & gestylt)
+# 🔒 Verbesserte Passwortabfrage – zentriert & gestylt
 def check_password():
     def password_entered():
         if st.session_state["password"] == "RettSüd15":
@@ -22,7 +22,12 @@ def check_password():
             st.text_input("Passwort", type="password", on_change=password_entered, key="password")
         st.stop()
 
+# Passwortprüfung zuerst ausführen
 check_password()
+
+# ===========================
+# ✅ RTW/KTW Aufgaben-App
+# ===========================
 
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 
@@ -90,80 +95,78 @@ def speichere_status(status_dict):
     with open(STATUS_DATEI, "w") as f:
         json.dump(status_dict, f)
 
-# Angepasste Funktion mit Farbcode für KTW (grün) und RTW (orange)
 def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=False):
     jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
     raw_key = f"{fahrzeug}_{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}"
     key_hash = hashlib.md5(raw_key.encode()).hexdigest()
     checked = status_dict.get(key_hash, False)
 
-    # Farbwerte abhängig vom Fahrzeug
-    if fahrzeug == "KTW":
-        bg_checked = "#e8f5e9"   # hellgrün
-        border_checked = "#388e3c"
-        bg_unchecked = "#f1f8e9" # sehr hellgrün
-        border_unchecked = "#81c784"
-    else:  # RTW
-        bg_checked = "#fff3e0"   # hellorange
-        border_checked = "#f57c00"
-        bg_unchecked = "#fff8e1" # sehr hellorange
-        border_unchecked = "#ffb74d"
-
     if readonly:
         if checked:
-            st.markdown(f"""
-                <div style='background:{bg_checked}; border-left:5px solid {border_checked}; padding:10px; margin-bottom:8px; border-radius:6px;'>
-                    ✅ <b>{aufgabe}</b>
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
         else:
-            st.markdown(f"""
-                <div style='background:{bg_unchecked}; border-left:5px solid {border_unchecked}; padding:10px; margin-bottom:8px; border-radius:6px;'>
-                    ⏳ <b>{aufgabe}</b>
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
     else:
-        neu_gesetzt = st.checkbox(f"{aufgabe}", value=checked, key=key_hash)
+        neu_gesetzt = st.checkbox("", value=checked, key=key_hash)
         if neu_gesetzt != checked:
             status_dict[key_hash] = neu_gesetzt
             speichere_status(status_dict)
             if neu_gesetzt:
                 st.balloons()
 
+        if neu_gesetzt:
+            st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
+
+# Aktuelles Datum und Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
 heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
 heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
 feiertag_heute = feiertage_2025.get(heute_str)
 
+# Lade gespeicherten Status
 status_dict = lade_status()
 
+# Seitentitel & Header
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
-st.markdown("## ✅ Aufgaben für heute")
-
+# Aufgabenbereiche in Boxen mit Farben & Überschrift und Liste
 col_ktw, col_rtw = st.columns(2)
 
 with col_ktw:
-    st.markdown(f"""
-        <div style='background:#e8f5e9; border-radius:8px; padding:15px; margin-bottom:20px; box-shadow: 2px 2px 7px #a5d6a7;'>
-            <h3 style='color:#2e7d32;'>🧾 Aufgaben KTW</h3>
+    st.markdown("""
+    <div style="
+        background-color:#e8f5e9; 
+        border:2px solid #2e7d32; 
+        border-radius:12px; 
+        padding:20px; 
+        box-shadow: 2px 3px 8px rgba(46, 125, 50, 0.15);
+    ">
+        <h3 style='color:#2e7d32; margin-bottom:12px;'>🧾 Aufgaben KTW</h3>
     """, unsafe_allow_html=True)
     for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="KTW", readonly=False)
     st.markdown("</div>", unsafe_allow_html=True)
 
 with col_rtw:
-    st.markdown(f"""
-        <div style='background:#fff3e0; border-radius:8px; padding:15px; margin-bottom:20px; box-shadow: 2px 2px 7px #ffcc80;'>
-            <h3 style='color:#f57c00;'>🚑 Aufgaben RTW</h3>
+    st.markdown("""
+    <div style="
+        background-color:#ffebee; 
+        border:2px solid #c62828; 
+        border-radius:12px; 
+        padding:20px; 
+        box-shadow: 2px 3px 8px rgba(198, 40, 40, 0.15);
+    ">
+        <h3 style='color:#c62828; margin-bottom:12px;'>🚑 Aufgaben RTW</h3>
     """, unsafe_allow_html=True)
     for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="RTW", readonly=False)
     st.markdown("</div>", unsafe_allow_html=True)
 
+# Dropdown für andere Tage
 st.markdown("---")
-
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
 if tag_auswahl != "—":
@@ -171,26 +174,101 @@ if tag_auswahl != "—":
     col_ktw, col_rtw = st.columns(2)
 
     with col_ktw:
-        st.markdown(f"""
-            <div style='background:#e8f5e9; border-radius:8px; padding:15px; margin-bottom:20px; box-shadow: 2px 2px 7px #a5d6a7;'>
-                <h3 style='color:#2e7d32;'>🧾 Aufgaben KTW</h3>
+        st.markdown("""
+        <div style="
+            background-color:#e8f5e9; 
+            border:2px solid #2e7d32; 
+            border-radius:12px; 
+            padding:20px; 
+            box-shadow: 2px 3px 8px rgba(46, 125, 50, 0.15);
+        ">
+            <h3 style='color:#2e7d32; margin-bottom:12px;'>🧾 Aufgaben KTW</h3>
         """, unsafe_allow_html=True)
         for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
             aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="KTW", readonly=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     with col_rtw:
-        st.markdown(f"""
-            <div style='background:#fff3e0; border-radius:8px; padding:15px; margin-bottom:20px; box-shadow: 2px 2px 7px #ffcc80;'>
-                <h3 style='color:#f57c00;'>🚑 Aufgaben RTW</h3>
+        st.markdown("""
+        <div style="
+            background-color:#ffebee; 
+            border:2px solid #c62828; 
+            border-radius:12px; 
+            padding:20px; 
+            box-shadow: 2px 3px 8px rgba(198, 40, 40, 0.15);
+        ">
+            <h3 style='color:#c62828; margin-bottom:12px;'>🚑 Aufgaben RTW</h3>
         """, unsafe_allow_html=True)
         for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
             aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="RTW", readonly=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
+# Tagesinfos schön gestaltet mit 4 farbigen Boxen
 st.markdown("---")
 st.markdown("### 🌤️ Zusätzliche Tagesinfos")
 
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("🕒 Uhrzeit", get_current_time())
-col2.metric("🎉 Feiertag", feiertag_heute if feiertag_heute else "Kein Feiertag heute 😟")
+
+col1.markdown(f"""
+    <div style="
+        background:#e8f5e9; 
+        border:1.5px solid #2e7d32; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#2e7d32;
+        box-shadow: 1px 1px 4px rgba(46, 125, 50, 0.15);
+    ">
+        🕒 Uhrzeit<br><span style='font-size:24px;'>{get_current_time()}</span>
+    </div>
+""", unsafe_allow_html=True)
+
+col2.markdown(f"""
+    <div style="
+        background:#ffebee; 
+        border:1.5px solid #c62828; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#c62828;
+        box-shadow: 1px 1px 4px rgba(198, 40, 40, 0.15);
+    ">
+        🎉 Feiertag<br><span style='font-size:20px;'>{feiertag_heute if feiertag_heute else "Kein Feiertag heute 😟"}</span>
+    </div>
+""", unsafe_allow_html=True)
+
+col3.markdown("""
+    <div style="
+        background:#fff3e0; 
+        border:1.5px solid #f57c00; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#f57c00;
+        box-shadow: 1px 1px 4px rgba(245, 124, 0, 0.15);
+    ">
+        ⚠️ Sicherheits-Check<br>
+        <span style='font-size:18px; font-weight:normal;'>
+            Vor Fahrtbeginn: Fahrzeug-Check durchführen!
+        </span>
+    </div>
+""", unsafe_allow_html=True)
+
+col4.markdown("""
+    <div style="
+        background:#ede7f6; 
+        border:1.5px solid #5e35b1; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#5e35b1;
+        box-shadow: 1px 1px 4px rgba(94, 53, 177, 0.15);
+    ">
+        📌 Tipp<br><span style='font-size:18px;'>Regelmäßig Aufgaben prüfen!</span>
+    </div>
+""", unsafe_allow_html=True)
+
