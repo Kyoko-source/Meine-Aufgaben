@@ -250,21 +250,6 @@ col3.markdown("""
         color:#f57c00;
         box-shadow: 1px 1px 4px rgba(245, 124, 0, 0.15);
     ">
-        ⚠️ Hinweis<br><span style='font-size:18px;'>Hier können weitere Infos stehen</span>
-    </div>
-""", unsafe_allow_html=True)
-
-col3.markdown("""
-    <div style="
-        background:#fff3e0; 
-        border:1.5px solid #f57c00; 
-        border-radius:8px; 
-        padding:12px; 
-        text-align:center;
-        font-weight:bold;
-        color:#f57c00;
-        box-shadow: 1px 1px 4px rgba(245, 124, 0, 0.15);
-    ">
         ⚠️ Sicherheits-Check<br>
         <span style='font-size:18px; font-weight:normal;'>
             Vor Fahrtbeginn: Fahrzeug-Check durchführen!<br>
@@ -272,4 +257,20 @@ col3.markdown("""
         </span>
     </div>
 """, unsafe_allow_html=True)
+
+col4.markdown("""
+    <div style="
+        background:#ede7f6; 
+        border:1.5px solid #5e35b1; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#5e35b1;
+        box-shadow: 1px 1px 4px rgba(94, 53, 177, 0.15);
+    ">
+        📌 Tipp<br><span style='font-size:18px;'>Regelmäßig Aufgaben prüfen!</span>
+    </div>
+""", unsafe_allow_html=True)
+
 
