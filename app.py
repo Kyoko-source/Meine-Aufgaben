@@ -90,22 +90,35 @@ def speichere_status(status_dict):
     with open(STATUS_DATEI, "w") as f:
         json.dump(status_dict, f)
 
+# Angepasste Funktion mit Farbcode für KTW (grün) und RTW (orange)
 def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=False):
     jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
     raw_key = f"{fahrzeug}_{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}"
     key_hash = hashlib.md5(raw_key.encode()).hexdigest()
     checked = status_dict.get(key_hash, False)
 
+    # Farbwerte abhängig vom Fahrzeug
+    if fahrzeug == "KTW":
+        bg_checked = "#e8f5e9"   # hellgrün
+        border_checked = "#388e3c"
+        bg_unchecked = "#f1f8e9" # sehr hellgrün
+        border_unchecked = "#81c784"
+    else:  # RTW
+        bg_checked = "#fff3e0"   # hellorange
+        border_checked = "#f57c00"
+        bg_unchecked = "#fff8e1" # sehr hellorange
+        border_unchecked = "#ffb74d"
+
     if readonly:
         if checked:
             st.markdown(f"""
-                <div style='background:#e8f5e9; border-left:5px solid #388e3c; padding:10px; margin-bottom:8px; border-radius:6px;'>
+                <div style='background:{bg_checked}; border-left:5px solid {border_checked}; padding:10px; margin-bottom:8px; border-radius:6px;'>
                     ✅ <b>{aufgabe}</b>
                 </div>
             """, unsafe_allow_html=True)
         else:
             st.markdown(f"""
-                <div style='background:#fff3e0; border-left:5px solid #f57c00; padding:10px; margin-bottom:8px; border-radius:6px;'>
+                <div style='background:{bg_unchecked}; border-left:5px solid {border_unchecked}; padding:10px; margin-bottom:8px; border-radius:6px;'>
                     ⏳ <b>{aufgabe}</b>
                 </div>
             """, unsafe_allow_html=True)
@@ -117,7 +130,6 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=Fal
             if neu_gesetzt:
                 st.balloons()
 
-# Aktuelles Datum und Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
 heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
 heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
@@ -133,7 +145,7 @@ st.markdown("## ✅ Aufgaben für heute")
 col_ktw, col_rtw = st.columns(2)
 
 with col_ktw:
-    st.markdown("""
+    st.markdown(f"""
         <div style='background:#e8f5e9; border-radius:8px; padding:15px; margin-bottom:20px; box-shadow: 2px 2px 7px #a5d6a7;'>
             <h3 style='color:#2e7d32;'>🧾 Aufgaben KTW</h3>
     """, unsafe_allow_html=True)
@@ -142,7 +154,7 @@ with col_ktw:
     st.markdown("</div>", unsafe_allow_html=True)
 
 with col_rtw:
-    st.markdown("""
+    st.markdown(f"""
         <div style='background:#fff3e0; border-radius:8px; padding:15px; margin-bottom:20px; box-shadow: 2px 2px 7px #ffcc80;'>
             <h3 style='color:#f57c00;'>🚑 Aufgaben RTW</h3>
     """, unsafe_allow_html=True)
@@ -159,7 +171,7 @@ if tag_auswahl != "—":
     col_ktw, col_rtw = st.columns(2)
 
     with col_ktw:
-        st.markdown("""
+        st.markdown(f"""
             <div style='background:#e8f5e9; border-radius:8px; padding:15px; margin-bottom:20px; box-shadow: 2px 2px 7px #a5d6a7;'>
                 <h3 style='color:#2e7d32;'>🧾 Aufgaben KTW</h3>
         """, unsafe_allow_html=True)
@@ -168,7 +180,7 @@ if tag_auswahl != "—":
         st.markdown("</div>", unsafe_allow_html=True)
 
     with col_rtw:
-        st.markdown("""
+        st.markdown(f"""
             <div style='background:#fff3e0; border-radius:8px; padding:15px; margin-bottom:20px; box-shadow: 2px 2px 7px #ffcc80;'>
                 <h3 style='color:#f57c00;'>🚑 Aufgaben RTW</h3>
         """, unsafe_allow_html=True)
