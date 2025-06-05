@@ -15,7 +15,6 @@ def check_password():
             st.error("❌ Falsches Passwort. Bitte versuche es erneut.")
 
     if "passwort_akzeptiert" not in st.session_state or not st.session_state["passwort_akzeptiert"]:
-        # Layout für zentrierte Eingabe
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("## 🔐 Zugriff geschützt")
@@ -48,7 +47,7 @@ aufgaben_rtw = {
     "Montag": ["Fächerdesi 1-6", "Umkleide Bad SW-Bereich reinigen"],
     "Dienstag": ["BZ Kontrolle", "Fächerdesi 7-11"],
     "Mittwoch": ["Innenraumdesi RTW"],
-    "Donnerstag": ["Auto waschen (RTW)", "Garage reinigen"],
+    "Donnerstag": ["Auto waschen (RTW)", "Garage reinigen", "Betriebsmittelkontrolle"],
     "Freitag": ["Fach 12-18 desinfizieren", "O2 Schlauch + Fingertipp wechseln", "Betriebsmittel Kontrolle"],
     "Samstag": ["Fach 20-22 desinfizieren"],
     "Sonntag": ["Küche reinigen alle Fronten"]
@@ -133,19 +132,35 @@ status_dict = lade_status()
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
-# Aktuelle Tagesaufgaben
-st.markdown("## ✅ Aufgaben für heute")
+# Eigene Box-Funktion mit Styling
+def box(title, content_function, border_color="#4CAF50", bg_color="#e8f5e9"):
+    st.markdown(f"""
+    <div style="
+        border: 2px solid {border_color}; 
+        border-radius: 10px; 
+        padding: 15px; 
+        margin-bottom: 20px; 
+        background: {bg_color};
+        ">
+        <h3 style="color:{border_color}; margin-top: 0;">{title}</h3>
+    """, unsafe_allow_html=True)
+    content_function()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# Tagesaufgaben mit Boxen und Spalten
 col_ktw, col_rtw = st.columns(2)
 
 with col_ktw:
-    st.write("### 🧾 Aufgaben KTW")
-    for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
-        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="KTW", readonly=False)
+    def show_ktw():
+        for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
+            aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="KTW", readonly=False)
+    box("🧾 Aufgaben KTW", show_ktw, border_color="#4CAF50", bg_color="#e8f5e9")  # grün
 
 with col_rtw:
-    st.write("### 🚑 Aufgaben RTW")
-    for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
-        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="RTW", readonly=False)
+    def show_rtw():
+        for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
+            aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="RTW", readonly=False)
+    box("🚑 Aufgaben RTW", show_rtw, border_color="#2196F3", bg_color="#e3f2fd")  # blau
 
 # Dropdown für andere Tage
 st.markdown("---")
@@ -156,14 +171,16 @@ if tag_auswahl != "—":
     col_ktw, col_rtw = st.columns(2)
 
     with col_ktw:
-        st.write("### 🧾 Aufgaben KTW")
-        for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
-            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="KTW", readonly=True)
+        def show_ktw_ro():
+            for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
+                aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="KTW", readonly=True)
+        box("🧾 Aufgaben KTW", show_ktw_ro, border_color="#4CAF50", bg_color="#e8f5e9")
 
     with col_rtw:
-        st.write("### 🚑 Aufgaben RTW")
-        for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
-            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="RTW", readonly=True)
+        def show_rtw_ro():
+            for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
+                aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="RTW", readonly=True)
+        box("🚑 Aufgaben RTW", show_rtw_ro, border_color="#2196F3", bg_color="#e3f2fd")
 
 # Tagesinfos
 st.markdown("---")
