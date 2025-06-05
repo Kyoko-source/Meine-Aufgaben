@@ -15,13 +15,16 @@ def check_password():
             st.error("❌ Falsches Passwort. Bitte versuche es erneut.")
 
     if "passwort_akzeptiert" not in st.session_state or not st.session_state["passwort_akzeptiert"]:
-        # Layout für zentrierte Box
+        # Layout für zentrierte Eingabe
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
             st.markdown("## 🔐 Zugriff geschützt")
             st.markdown("Bitte Passwort eingeben, um fortzufahren.")
             st.text_input("Passwort", type="password", on_change=password_entered, key="password")
         st.stop()
+
+# Passwortprüfung zuerst ausführen
+check_password()
 
 # ===========================
 # ✅ RTW/KTW Aufgaben-App
