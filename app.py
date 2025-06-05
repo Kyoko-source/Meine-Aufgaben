@@ -257,4 +257,14 @@ col3.markdown("""
 col4.markdown("""
     <div style="
         background:#ede7f6; 
-        border
+        border:1.5px solid #5e35b1; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#5e35b1;
+        box-shadow: 1px 1px 4px rgba(94, 53, 177, 0.15);
+    ">
+        📌 Tipp<br><span style='font-size:18px;'>Regelmäßig Aufgaben prüfen!</span>
+    </div>
+""", unsafe_allow_html=True)
