@@ -5,25 +5,23 @@ import json
 import os
 import hashlib
 
-# 🔒 Passwortschutz – muss ganz oben stehen!
+# 🔒 Verbesserte Passwortabfrage – zentriert & gestylt
 def check_password():
     def password_entered():
         if st.session_state["password"] == "RettSüd15":
             st.session_state["passwort_akzeptiert"] = True
         else:
             st.session_state["passwort_akzeptiert"] = False
-            st.warning("❌ Falsches Passwort!")
+            st.error("❌ Falsches Passwort. Bitte versuche es erneut.")
 
-    if "passwort_akzeptiert" not in st.session_state:
-        st.text_input("🔐 Passwort eingeben", type="password", on_change=password_entered, key="password")
+    if "passwort_akzeptiert" not in st.session_state or not st.session_state["passwort_akzeptiert"]:
+        # Layout für zentrierte Box
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.markdown("## 🔐 Zugriff geschützt")
+            st.markdown("Bitte Passwort eingeben, um fortzufahren.")
+            st.text_input("Passwort", type="password", on_change=password_entered, key="password")
         st.stop()
-
-    if not st.session_state["passwort_akzeptiert"]:
-        st.text_input("🔐 Passwort eingeben", type="password", on_change=password_entered, key="password")
-        st.stop()
-
-# ⛔ Passwortprüfung VOR allem anderen
-check_password()
 
 # ===========================
 # ✅ RTW/KTW Aufgaben-App
