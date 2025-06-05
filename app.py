@@ -5,7 +5,7 @@ import json
 import os
 import hashlib
 
-# 🔒 Passwortschutz
+# 🔒 Passwortschutz – muss ganz oben stehen!
 def check_password():
     def password_entered():
         if st.session_state["password"] == "RettSüd15":
@@ -22,12 +22,14 @@ def check_password():
         st.text_input("🔐 Passwort eingeben", type="password", on_change=password_entered, key="password")
         st.stop()
 
-# Passwortabfrage starten
+# ⛔ Passwortprüfung VOR allem anderen
 check_password()
 
 # ===========================
-# Aufgabenverwaltungssystem
+# ✅ RTW/KTW Aufgaben-App
 # ===========================
+
+st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 
 STATUS_DATEI = "status.json"
 
@@ -45,8 +47,8 @@ aufgaben_rtw = {
     "Montag": ["Fächerdesi 1-6", "Umkleide Bad SW-Bereich reinigen"],
     "Dienstag": ["BZ Kontrolle", "Fächerdesi 7-11"],
     "Mittwoch": ["Innenraumdesi RTW"],
-    "Donnerstag": ["Auto waschen (RTW)", "Garage reinigen"],
-    "Freitag": ["Fach 12-18 desinfizieren", "O2 Schlauch + Fingertipp wechseln", "Betriebsmittelkontrolle"],
+    "Donnerstag": ["Auto waschen (RTW)", "Garage reinigen", "Betriebsmittelkontrolle"],
+    "Freitag": ["Fach 12-18 desinfizieren", "O2 Schlauch + Fingertipp wechseln", "Betriebsmittel Kontrolle"],
     "Samstag": ["Fach 20-22 desinfizieren"],
     "Sonntag": ["Küche reinigen alle Fronten"]
 }
@@ -126,8 +128,7 @@ feiertag_heute = feiertage_2025.get(heute_str)
 # Lade gespeicherten Status
 status_dict = lade_status()
 
-# Streamlit-Konfiguration
-st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
+# Seitentitel & Header
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
