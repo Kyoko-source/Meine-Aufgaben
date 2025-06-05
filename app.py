@@ -252,8 +252,7 @@ col3.markdown("""
     ">
         ⚠️ Sicherheits-Check<br>
         <span style='font-size:18px; font-weight:normal;'>
-            Vor Fahrtbeginn: Fahrzeug-Check durchführen!<br>
-            Achte auf korrekte PSA (Persönliche Schutzausrüstung).
+            Vor Fahrtbeginn: Fahrzeug-Check durchführen!
         </span>
     </div>
 """, unsafe_allow_html=True)
