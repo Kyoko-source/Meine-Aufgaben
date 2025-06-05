@@ -5,10 +5,32 @@ import json
 import os
 import hashlib
 
-# Datei zum Speichern der Checkbox-Zustände
+# 🔒 Passwortschutz
+def check_password():
+    def password_entered():
+        if st.session_state["password"] == "RettSüd15":
+            st.session_state["passwort_akzeptiert"] = True
+        else:
+            st.session_state["passwort_akzeptiert"] = False
+            st.warning("❌ Falsches Passwort!")
+
+    if "passwort_akzeptiert" not in st.session_state:
+        st.text_input("🔐 Passwort eingeben", type="password", on_change=password_entered, key="password")
+        st.stop()
+
+    if not st.session_state["passwort_akzeptiert"]:
+        st.text_input("🔐 Passwort eingeben", type="password", on_change=password_entered, key="password")
+        st.stop()
+
+# Passwortabfrage starten
+check_password()
+
+# ===========================
+# Aufgabenverwaltungssystem
+# ===========================
+
 STATUS_DATEI = "status.json"
 
-# Aufgabenlisten KTW und RTW
 aufgaben_ktw = {
     "Montag": ["Fächerdesi 1-6", "Umkleide Bad SW-Bereich reinigen"],
     "Dienstag": ["BZ Kontrolle", "Fächerdesi 7-8", "BZ Messung"],
@@ -23,8 +45,8 @@ aufgaben_rtw = {
     "Montag": ["Fächerdesi 1-6", "Umkleide Bad SW-Bereich reinigen"],
     "Dienstag": ["BZ Kontrolle", "Fächerdesi 7-11"],
     "Mittwoch": ["Innenraumdesi RTW"],
-    "Donnerstag": ["Auto waschen (RTW)", "Garage reinigen", "Betriebsmittelkontrolle"],
-    "Freitag": ["Fach 12-18 desinfizieren", "O2 Schlauch + Fingertipp wechseln", "Betriebsmittel Kontrolle"],
+    "Donnerstag": ["Auto waschen (RTW)", "Garage reinigen"],
+    "Freitag": ["Fach 12-18 desinfizieren", "O2 Schlauch + Fingertipp wechseln", "Betriebsmittelkontrolle"],
     "Samstag": ["Fach 20-22 desinfizieren"],
     "Sonntag": ["Küche reinigen alle Fronten"]
 }
