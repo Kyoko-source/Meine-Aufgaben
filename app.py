@@ -71,20 +71,18 @@ def speichere_status(status_dict):
     with open(STATUS_DATEI, "w") as f:
         json.dump(status_dict, f)
 
-def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, readonly=False):
+def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=False):
     jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
-    raw_key = f"{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}"
+    raw_key = f"{fahrzeug}_{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}"
     key_hash = hashlib.md5(raw_key.encode()).hexdigest()
     checked = status_dict.get(key_hash, False)
 
     if readonly:
-        # Nur Anzeige – keine Checkbox, kein Key-Konflikt
         if checked:
             st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
         else:
             st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
     else:
-        # Interaktive Checkbox mit Speicherfunktion
         neu_gesetzt = st.checkbox("", value=checked, key=key_hash)
         if neu_gesetzt != checked:
             status_dict[key_hash] = neu_gesetzt
@@ -118,12 +116,12 @@ col_ktw, col_rtw = st.columns(2)
 with col_ktw:
     st.write("### 🧾 Aufgaben KTW")
     for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
-        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, readonly=False)
+        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="KTW", readonly=False)
 
 with col_rtw:
     st.write("### 🚑 Aufgaben RTW")
     for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
-        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, readonly=False)
+        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="RTW", readonly=False)
 
 # Dropdown für andere Tage
 st.markdown("---")
@@ -136,12 +134,12 @@ if tag_auswahl != "—":
     with col_ktw:
         st.write("### 🧾 Aufgaben KTW")
         for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
-            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, readonly=True)
+            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="KTW", readonly=True)
 
     with col_rtw:
         st.write("### 🚑 Aufgaben RTW")
         for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
-            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, readonly=True)
+            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="RTW", readonly=True)
 
 # Tagesinfos
 st.markdown("---")
