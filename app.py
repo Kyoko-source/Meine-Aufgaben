@@ -5,7 +5,7 @@ import json
 import os
 import hashlib
 
-# 🔒 Passwortabfrage
+# 🔒 Verbesserte Passwortabfrage – zentriert & gestylt
 def check_password():
     def password_entered():
         if st.session_state["password"] == "RettSüd15":
@@ -22,10 +22,13 @@ def check_password():
             st.text_input("Passwort", type="password", on_change=password_entered, key="password")
         st.stop()
 
+# Passwortprüfung zuerst ausführen
 check_password()
 
-# =======================
-# App-Konfiguration
+# ===========================
+# ✅ RTW/KTW Aufgaben-App
+# ===========================
+
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 
 STATUS_DATEI = "status.json"
@@ -254,83 +257,17 @@ col3.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# ---- Quiz in der 4. Box ----
-
-quiz_fragen = [
-    {"frage": "Wie viele Aufgaben gibt es für Montag beim KTW?", "optionen": ["2", "3", "4"], "antwort": "2"},
-    {"frage": "Welcher Tag ist heute?", "optionen": list(tage_uebersetzung.values()), "antwort": heute_deutsch},
-    {"frage": "Was sollte vor Fahrtbeginn geprüft werden?", "optionen": ["Fahrzeug", "Fahrer", "Wetter"], "antwort": "Fahrzeug"},
-    {"frage": "Wie viele Aufgaben gibt es für Freitag beim RTW?", "optionen": ["2", "3", "4"], "antwort": "3"},
-]
-
-def quiz_starten():
-    quiz_fragen = [
-        {"frage": "Wie viele Aufgaben hat der KTW am Montag?", "optionen": ["2", "3", "4"], "antwort": "2"},
-        {"frage": "Was sollte vor Fahrtbeginn geprüft werden?", "optionen": ["Motoröl", "Fahrzeug-Check", "Reifenluftdruck"], "antwort": "Fahrzeug-Check"},
-        # Hier kannst du weitere Fragen ergänzen...
-    ]
-
-    # Initialisiere session_state Variablen falls noch nicht vorhanden
-    if "quiz_index" not in st.session_state:
-        st.session_state.quiz_index = 0
-    if "quiz_score" not in st.session_state:
-        st.session_state.quiz_score = 0
-    if "quiz_beendet" not in st.session_state:
-        st.session_state.quiz_beendet = False
-    if "quiz_aktiv" not in st.session_state:
-        st.session_state.quiz_aktiv = True  # ob das Quiz gerade läuft
-
-    if st.session_state.quiz_beendet:
-        st.success(f"Quiz beendet! Deine Punktzahl: {st.session_state.quiz_score} von {len(quiz_fragen)}")
-        name = st.text_input("Gib deinen Namen für das Scoreboard ein:", key="quiz_name")
-        if name and st.button("Score speichern"):
-            st.write(f"Score von {name} mit {st.session_state.quiz_score} Punkten gespeichert!")
-            # Reset Quiz Status falls gewünscht
-            st.session_state.quiz_aktiv = False
-            st.session_state.quiz_beendet = False
-            st.session_state.quiz_index = 0
-            st.session_state.quiz_score = 0
-        return
-
-    frage = quiz_fragen[st.session_state.quiz_index]
-    st.markdown(f"**Frage {st.session_state.quiz_index + 1}:** {frage['frage']}")
-    antwort = st.radio("Wähle eine Antwort:", frage["optionen"], key=f"antwort_{st.session_state.quiz_index}")
-
-    if st.button("Antwort prüfen"):
-        if antwort == frage["antwort"]:
-            st.session_state.quiz_score += 1
-            st.session_state.quiz_index += 1
-            if st.session_state.quiz_index >= len(quiz_fragen):
-                st.session_state.quiz_beendet = True
-        else:
-            st.session_state.quiz_beendet = True
-
-
-
-with col4:
-    # Stil für den Button via st.markdown mit CSS, damit Button groß und schön aussieht
-    st.markdown("""
-        <style>
-        div.stButton > button:first-child {
-            width: 100%;
-            height: 120px;
-            background-color: #e3f2fd;
-            border: 1.5px solid #1565c0;
-            border-radius: 8px;
-            color: #1565c0;
-            font-weight: bold;
-            font-size: 18px;
-            box-shadow: 1px 1px 4px rgba(21, 101, 192, 0.15);
-            cursor: pointer;
-        }
-        div.stButton > button:first-child:hover {
-            background-color: #bbdefb;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-    if st.button("❓ Quizzeit\nKlicke hier, um dein Wissen zu testen!"):
-        st.session_state.quiz_aktiv = True
-
-    if st.session_state.get("quiz_aktiv", False):
-        quiz_starten()
+col4.markdown("""
+    <div style="
+        background:#ede7f6; 
+        border:1.5px solid #5e35b1; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#5e35b1;
+        box-shadow: 1px 1px 4px rgba(94, 53, 177, 0.15);
+    ">
+        📌 Tipp<br><span style='font-size:18px;'>Regelmäßig Aufgaben prüfen!</span>
+    </div>
+""", unsafe_allow_html=True)
