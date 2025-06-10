@@ -3,8 +3,35 @@ import datetime
 import pytz
 import json
 import os
+import hashlib
 
-# ---------- Daten & Styling ----------
+# 🔒 Verbesserte Passwortabfrage – zentriert & gestylt
+def check_password():
+    def password_entered():
+        if st.session_state["password"] == "RettSüd15":
+            st.session_state["passwort_akzeptiert"] = True
+        else:
+            st.session_state["passwort_akzeptiert"] = False
+            st.error("❌ Falsches Passwort. Bitte versuche es erneut.")
+
+    if "passwort_akzeptiert" not in st.session_state or not st.session_state["passwort_akzeptiert"]:
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.markdown("## 🔐 Zugriff geschützt")
+            st.markdown("Bitte Passwort eingeben, um fortzufahren.")
+            st.text_input("Passwort", type="password", on_change=password_entered, key="password")
+        st.stop()
+
+# Passwortprüfung zuerst ausführen
+check_password()
+
+# ===========================
+# ✅ RTW/KTW Aufgaben-App
+# ===========================
+
+st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
+
+STATUS_DATEI = "status.json"
 
 aufgaben_ktw = {
     "Montag": ["Fächerdesi 1-6", "Umkleide Bad SW-Bereich reinigen"],
@@ -36,15 +63,27 @@ tage_uebersetzung = {
     "Sunday": "Sonntag"
 }
 
-quiz_fragen = [
-    ("Was ist die Hauptstadt von Deutschland?", ["Berlin", "München", "Frankfurt", "Hamburg"], 0),
-    ("Welcher Planet ist der dritte von der Sonne?", ["Mars", "Venus", "Erde", "Jupiter"], 2),
-    # ... alle 20 Fragen ...
-]
+feiertage_2025 = {
+    "01.01.2025": "Neujahrstag",
+    "06.01.2025": "Heilige Drei Könige",
+    "08.03.2025": "Internationaler Frauentag",
+    "18.04.2025": "Karfreitag",
+    "21.04.2025": "Ostermontag",
+    "01.05.2025": "Tag der Arbeit",
+    "29.05.2025": "Christi Himmelfahrt",
+    "09.06.2025": "Pfingstmontag",
+    "19.06.2025": "Fronleichnam",
+    "03.10.2025": "Tag der Deutschen Einheit",
+    "31.10.2025": "Reformationstag",
+    "01.11.2025": "Allerheiligen",
+    "19.11.2025": "Buß- und Bettag",
+    "25.12.2025": "1. Weihnachtstag",
+    "26.12.2025": "2. Weihnachtstag"
+}
 
-# ---------- Status laden/speichern ----------
-
-STATUS_DATEI = "status.json"
+def get_current_time():
+    timezone = pytz.timezone('Europe/Berlin')
+    return datetime.datetime.now(timezone).strftime('%H:%M:%S')
 
 def lade_status():
     if os.path.exists(STATUS_DATEI):
@@ -52,156 +91,153 @@ def lade_status():
             return json.load(f)
     return {}
 
-def speichere_status(status):
+def speichere_status(status_dict):
     with open(STATUS_DATEI, "w") as f:
-        json.dump(status, f)
+        json.dump(status_dict, f)
 
-# ---------- Styling als CSS ----------
+def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=False):
+    jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
+    raw_key = f"{fahrzeug}_{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}"
+    key_hash = hashlib.md5(raw_key.encode()).hexdigest()
+    checked = status_dict.get(key_hash, False)
 
-def lade_css():
+    if readonly:
+        if checked:
+            st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
+    else:
+        neu_gesetzt = st.checkbox("", value=checked, key=key_hash)
+        if neu_gesetzt != checked:
+            status_dict[key_hash] = neu_gesetzt
+            speichere_status(status_dict)
+            if neu_gesetzt:
+                st.balloons()
+
+        if neu_gesetzt:
+            st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
+
+# Aktuelles Datum und Wochentag
+heute_en = datetime.datetime.now().strftime('%A')
+heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
+heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
+feiertag_heute = feiertage_2025.get(heute_str)
+
+# Lade gespeicherten Status
+status_dict = lade_status()
+
+# Seitentitel & Header
+st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
+st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
+
+# Aufgabenbereiche in Boxen mit Farben & Überschrift und Liste
+col_ktw, col_rtw = st.columns(2)
+
+with col_ktw:
     st.markdown("""
-    <style>
-    .aufgabe-rtw {
-        background-color: #ffdddd;
-        padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 5px;
-    }
-    .aufgabe-ktw {
-        background-color: #ddffdd;
-        padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 5px;
-    }
-    .quiz-box {
-        background-color: #ddeeff;
-        padding: 15px;
-        border-radius: 10px;
-        margin-top: 15px;
-    }
-    </style>
+    <div style="
+        background-color:#e8f5e9; 
+        border:2px solid #2e7d32; 
+        border-radius:12px; 
+        padding:20px; 
+        box-shadow: 2px 3px 8px rgba(46, 125, 50, 0.15);
+    ">
+        <h3 style='color:#2e7d32; margin-bottom:12px;'>🧾 Aufgaben KTW</h3>
     """, unsafe_allow_html=True)
+    for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
+        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="KTW", readonly=False)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-# ---------- Hauptfunktion ----------
+with col_rtw:
+    st.markdown("""
+    <div style="
+        background-color:#ffebee; 
+        border:2px solid #c62828; 
+        border-radius:12px; 
+        padding:20px; 
+        box-shadow: 2px 3px 8px rgba(198, 40, 40, 0.15);
+    ">
+        <h3 style='color:#c62828; margin-bottom:12px;'>🚑 Aufgaben RTW</h3>
+    """, unsafe_allow_html=True)
+    for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
+        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="RTW", readonly=False)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-def main():
-    st.title("🚑 RTW & KTW Aufgaben + Quiz 🚑")
+# Dropdown für andere Tage
+st.markdown("---")
+tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
-    lade_css()
+if tag_auswahl != "—":
+    st.write(f"### 🔎 Aufgaben für {tag_auswahl}")
+    col_ktw, col_rtw = st.columns(2)
 
-    if "status_dict" not in st.session_state:
-        st.session_state["status_dict"] = lade_status()
+    with col_ktw:
+        st.markdown("""
+        <div style="
+            background-color:#e8f5e9; 
+            border:2px solid #2e7d32; 
+            border-radius:12px; 
+            padding:20px; 
+            box-shadow: 2px 3px 8px rgba(46, 125, 50, 0.15);
+        ">
+            <h3 style='color:#2e7d32; margin-bottom:12px;'>🧾 Aufgaben KTW</h3>
+        """, unsafe_allow_html=True)
+        for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
+            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="KTW", readonly=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    if "quiz_active" not in st.session_state:
-        st.session_state["quiz_active"] = False
-    if "quiz_index" not in st.session_state:
-        st.session_state["quiz_index"] = 0
-    if "score" not in st.session_state:
-        st.session_state["score"] = 0
-    if "player_name" not in st.session_state:
-        st.session_state["player_name"] = ""
-    if "scoreboard" not in st.session_state:
-        st.session_state["scoreboard"] = {}
+    with col_rtw:
+        st.markdown("""
+        <div style="
+            background-color:#ffebee; 
+            border:2px solid #c62828; 
+            border-radius:12px; 
+            padding:20px; 
+            box-shadow: 2px 3px 8px rgba(198, 40, 40, 0.15);
+        ">
+            <h3 style='color:#c62828; margin-bottom:12px;'>🚑 Aufgaben RTW</h3>
+        """, unsafe_allow_html=True)
+        for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
+            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="RTW", readonly=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    if not st.session_state["quiz_active"]:
-        if st.sidebar.button("▶️ Quiz starten"):
-            st.session_state["quiz_active"] = True
-            st.session_state["quiz_index"] = 0
-            st.session_state["score"] = 0
-            st.session_state["player_name"] = ""
+# Tagesinfos schön gestaltet mit 4 farbigen Boxen
+st.markdown("---")
+st.markdown("### 🌤️ Zusätzliche Tagesinfos")
 
-    if st.session_state["quiz_active"]:
-        with st.container():
-            st.markdown('<div class="quiz-box">', unsafe_allow_html=True)
-            st.header("🎯 Quiz")
-            if not st.session_state["player_name"]:
-                name = st.text_input("Bitte gib deinen Namen ein:", key="eingabe_name")
-                if name:
-                    st.session_state["player_name"] = name
-                else:
-                    st.info("Bitte Namen eingeben, um das Quiz zu starten.")
-                    st.stop()
+col1, col2, col3, col4 = st.columns(4)
 
-            idx = st.session_state["quiz_index"]
-            frage, antworten, korrekt = quiz_fragen[idx]
+col1.markdown(f"""
+    <div style="
+        background:#e8f5e9; 
+        border:1.5px solid #2e7d32; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#2e7d32;
+        box-shadow: 1px 1px 4px rgba(46, 125, 50, 0.15);
+    ">
+        🕒 Uhrzeit<br><span style='font-size:24px;'>{get_current_time()}</span>
+    </div>
+""", unsafe_allow_html=True)
 
-            st.write(f"**Frage {idx+1} von {len(quiz_fragen)}:** {frage}")
-            antwort = st.radio("Antwort auswählen:", antworten, key=f"frage_{idx}")
+col2.markdown(f"""
+    <div style="
+        background:#ffebee; 
+        border:1.5px solid #c62828; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#c62828;
+        box-shadow: 1px 1px 4px rgba(198, 40, 40, 0.15);
+    ">
+        🎉 Feiertag<br><span style='font-size:20px;'>{feiertag_heute if feiertag_heute else "Kein Feiertag heute 😟"}</span>
+    </div>
+""", unsafe_allow_html=True)
 
-            if st.button("Antwort prüfen"):
-                if antwort == antworten[korrekt]:
-                    st.success("Richtig! 🎉")
-                    st.session_state["score"] += 1
-                    st.session_state["quiz_index"] += 1
-                    if st.session_state["quiz_index"] >= len(quiz_fragen):
-                        st.balloons()
-                        st.success(f"Herzlichen Glückwunsch {st.session_state['player_name']}! Alle Fragen richtig.")
-                        beende_quiz()
-                else:
-                    st.error(f"Falsch! Quiz beendet. Deine Punktzahl: {st.session_state['score']}")
-                    beende_quiz()
-
-            st.write(f"📊 Aktueller Punktestand: {st.session_state['score']}")
-            st.markdown('</div>', unsafe_allow_html=True)
-
-    else:
-        heute = datetime.datetime.now(pytz.timezone('Europe/Berlin'))
-        heute_en = heute.strftime("%A")
-        heute_de = tage_uebersetzung.get(heute_en, heute_en)
-        datum = heute.strftime("%d.%m.%Y")
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.markdown('<div class="aufgabe-rtw">', unsafe_allow_html=True)
-            st.header("🚑 RTW Aufgaben")
-            for aufgabe in aufgaben_rtw.get(heute_de, []):
-                key = f"rtw_{heute_de}_{aufgabe}"
-                checked = st.session_state["status_dict"].get(key, False)
-                neu = st.checkbox(aufgabe, value=checked, key=key)
-                if neu != checked:
-                    st.session_state["status_dict"][key] = neu
-                    speichere_status(st.session_state["status_dict"])
-                    if neu:
-                        st.balloons()
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        with col2:
-            st.markdown('<div class="aufgabe-ktw">', unsafe_allow_html=True)
-            st.header("🚐 KTW Aufgaben")
-            for aufgabe in aufgaben_ktw.get(heute_de, []):
-                key = f"ktw_{heute_de}_{aufgabe}"
-                checked = st.session_state["status_dict"].get(key, False)
-                neu = st.checkbox(aufgabe, value=checked, key=key)
-                if neu != checked:
-                    st.session_state["status_dict"][key] = neu
-                    speichere_status(st.session_state["status_dict"])
-                    if neu:
-                        st.balloons()
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown("---")
-        zeige_scoreboard()
-
-def beende_quiz():
-    name = st.session_state["player_name"] or "Unbekannt"
-    punkte = st.session_state["score"]
-    if name in st.session_state["scoreboard"]:
-        if punkte > st.session_state["scoreboard"][name]:
-            st.session_state["scoreboard"][name] = punkte
-    else:
-        st.session_state["scoreboard"][name] = punkte
-
-    st.session_state["quiz_active"] = False
-
-def zeige_scoreboard():
-    st.subheader("🏆 Scoreboard")
-    if not st.session_state["scoreboard"]:
-        st.write("Noch keine Einträge.")
-        return
-    sortiert = sorted(st.session_state["scoreboard"].items(), key=lambda x: x[1], reverse=True)
-    for name, score in sortiert:
-        st.write(f"**{name}**: {score} Punkte")
-
-if __name__ == "__main__":
-    main()
+col3.markdown("""
+    <
