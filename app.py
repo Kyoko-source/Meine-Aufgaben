@@ -5,7 +5,7 @@ import json
 import os
 import hashlib
 
-# 🔒 Verbesserte Passwortabfrage – zentriert & gestylt
+# 🔒 Passwortabfrage
 def check_password():
     def password_entered():
         if st.session_state["password"] == "RettSüd15":
@@ -22,13 +22,10 @@ def check_password():
             st.text_input("Passwort", type="password", on_change=password_entered, key="password")
         st.stop()
 
-# Passwortprüfung zuerst ausführen
 check_password()
 
-# ===========================
-# ✅ RTW/KTW Aufgaben-App
-# ===========================
-
+# =======================
+# App-Konfiguration
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 
 STATUS_DATEI = "status.json"
@@ -257,44 +254,64 @@ col3.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- QUIZ IN DER 4. BOX ---
+# ---- Quiz in der 4. Box ----
 
-# Quiz Fragen
 quiz_fragen = [
-    {
-        "frage": "Was sollte vor Fahrtbeginn geprüft werden?",
-        "optionen": ["Reifen", "Motoröl", "Bremsen", "Alle oben genannten"],
-        "antwort": 3
-    },
-    {
-        "frage": "Wie oft müssen die Feuerlöscher kontrolliert werden?",
-        "optionen": ["Jährlich", "Alle 2 Jahre", "Alle 5 Jahre", "Nie"],
-        "antwort": 0
-    },
-    {
-        "frage": "Welche Farbe hat der Rettungswagen?",
-        "optionen": ["Rot", "Gelb", "Blau", "Grün"],
-        "antwort": 1
-    },
-    {
-        "frage": "Was bedeutet das Martinshorn?",
-        "optionen": ["Gefahr", "Rettungseinsatz", "Unfall", "Alarm"],
-        "antwort": 1
-    },
-    {
-        "frage": "Wie viele Personen dürfen im KTW sitzen?",
-        "optionen": ["2", "4", "6", "8"],
-        "antwort": 2
-    },
-    {
-        "frage": "Was ist die wichtigste Aufgabe des RTW?",
-        "optionen": ["Patiententransport", "Patientenversorgung", "Fahrzeugpflege", "Kommunikation"],
-        "antwort": 1
-    },
-    {
-        "frage": "Wann wird der Notarzt hinzugezogen?",
-        "optionen": ["Bei jedem Einsatz", "Nur bei schweren Verletzungen", "Nie", "Bei Unfall mit mehreren Verletzten"],
-        "antwort": 1
-    },
-    {
-        "frage": "Was muss nach jedem
+    {"frage": "Wie viele Aufgaben gibt es für Montag beim KTW?", "optionen": ["2", "3", "4"], "antwort": "2"},
+    {"frage": "Welcher Tag ist heute?", "optionen": list(tage_uebersetzung.values()), "antwort": heute_deutsch},
+    {"frage": "Was sollte vor Fahrtbeginn geprüft werden?", "optionen": ["Fahrzeug", "Fahrer", "Wetter"], "antwort": "Fahrzeug"},
+    {"frage": "Wie viele Aufgaben gibt es für Freitag beim RTW?", "optionen": ["2", "3", "4"], "antwort": "3"},
+    # Füge weitere Fragen hier hinzu ...
+]
+
+def quiz_starten():
+    if "quiz_index" not in st.session_state:
+        st.session_state.quiz_index = 0
+        st.session_state.score = 0
+        st.session_state.quiz_aktiv = True
+        st.session_state.name = ""
+
+    # Quiz-Intro: Name abfragen, wenn noch nicht eingegeben
+    if st.session_state.name == "":
+        st.text_input("Bitte gib deinen Namen ein:", key="name")
+        if st.session_state.name:
+            st.session_state.quiz_index = 0
+            st.session_state.score = 0
+            st.session_state.quiz_aktiv = True
+        return
+
+    frage_aktuell = quiz_fragen[st.session_state.quiz_index]
+    st.markdown(f"**Frage {st.session_state.quiz_index +1} von {len(quiz_fragen)}:** {frage_aktuell['frage']}")
+
+    option = st.radio("Antwort auswählen:", frage_aktuell["optionen"], key=f"frage_{st.session_state.quiz_index}")
+
+    if st.button("Antwort bestätigen"):
+        if option == frage_aktuell["antwort"]:
+            st.success("Richtig!")
+            st.session_state.score += 1
+            st.session_state.quiz_index += 1
+            if st.session_state.quiz_index == len(quiz_fragen):
+                st.session_state.quiz_aktiv = False
+        else:
+            st.error("Falsch! Quiz beendet.")
+            st.session_state.quiz_aktiv = False
+
+    if not st.session_state.quiz_aktiv:
+        st.markdown(f"### {st.session_state.name}, du hast {st.session_state.score} von {len(quiz_fragen)} Fragen richtig beantwortet.")
+        if st.button("Quiz neu starten"):
+            st.session_state.quiz_index = 0
+            st.session_state.score = 0
+            st.session_state.quiz_aktiv = True
+            st.session_state.name = ""
+
+with col4:
+    st.markdown("""
+        <div style="
+            background:#ede7f6; 
+            border:1.5px solid #5e35b1; 
+            border-radius:8px; 
+            padding:12px; 
+            text-align:center;
+            font-weight:bold;
+            color:#5e35b1;
+            box-shadow: 1px 1px 4px rgba(94, 
