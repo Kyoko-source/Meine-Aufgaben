@@ -287,3 +287,12 @@ quiz_fragen = [
     ("Wie nennt man das Gerät zur Sauerstoffgabe?", ["O2 Schlauch", "Beatmungsbeutel", "Sauerstoffmaske", "Atemgerät"], 2),
     ("Welches Mittel verwendet man zur Desinfektion?", ["Alkohol", "Wasser", "Seife", "Öl"], 0),
     ("Was ist die stabile Seitenlage?", ["Lagerung zur Vermeidung von Aspiration", "Lagerung bei Herzinfarkt", "Lagerung bei Verbrennung", "Lagerung bei Knochenbruch"], 0),
+    ("Wann sollte man eine Herzdruckmassage beginnen?", ["Bei Puls", "Bei Atemstillstand", "Bei Bewusstlosigkeit", "Bei Schmerzen"], 1),
+    ("Wie oft sollte man Herzdruckmassage pro Minute durchführen?", ["50-70", "100-120", "130-150", "70-90"], 1),
+    ("Was bedeutet die Abkürzung BZ?", ["Blutzucker", "Blutdruck", "Beatmung", "Bewusstseinszustand"], 0),
+    ("Was ist bei einer O2-Flasche zu prüfen?", ["Füllstand und Druck", "Gewicht", "Farbe", "Form"], 0),
+    ("Was ist ein Notfall?", ["Krankheit", "Bedrohung für Leben oder Gesundheit", "Routinekontrolle", "Arztbesuch"], 1),
+    ("Was sollte man bei einer Verbrennung als Erstes tun?", ["Kühlen", "Wärmen", "Eincremen", "Abdecken"], 0),
+    ("Was macht man, wenn jemand nicht mehr atmet?", ["Beatmen", "Laufen lassen", "Schütteln", "Wasser geben"], 0),
+    ("Was bedeutet die Abkürzung KTW?", ["Krankentransportwagen", "Kindertransportwagen", "Katastrophentransportwagen", "Krafttransportwagen"], 0)
+]
