@@ -310,4 +310,19 @@ def quiz_starten():
 with col4:
     st.markdown("""
         <div style="
+            background:#e3f2fd; 
+            border:1.5px solid #1565c0; 
+            border-radius:8px; 
+            padding:12px; 
+            text-align:center;
+            font-weight:bold;
+            color:#1565c0;
+            box-shadow: 1px 1px 4px rgba(21, 101, 192, 0.15);
+        ">
+            ❓ Quizzeit<br>
+            Klicke auf den Button, um dein Wissen zu testen!
+        </div>
+    """, unsafe_allow_html=True)
+
+    quiz_starten()
            
