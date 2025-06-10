@@ -5,31 +5,11 @@ import json
 import os
 import hashlib
 
-# 🔒 Verbesserte Passwortabfrage – zentriert & gestylt
-def check_password():
-    def password_entered():
-        if st.session_state["password"] == "RettSüd15":
-            st.session_state["passwort_akzeptiert"] = True
-        else:
-            st.session_state["passwort_akzeptiert"] = False
-            st.error("❌ Falsches Passwort. Bitte versuche es erneut.")
-
-    if "passwort_akzeptiert" not in st.session_state or not st.session_state["passwort_akzeptiert"]:
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.markdown("## 🔐 Zugriff geschützt")
-            st.markdown("Bitte Passwort eingeben, um fortzufahren.")
-            st.text_input("Passwort", type="password", on_change=password_entered, key="password")
-        st.stop()
-
-# Passwortprüfung zuerst ausführen
-check_password()
-
 # ===========================
-# ✅ RTW/KTW Aufgaben-App
+# ✅ RTW/KTW Aufgaben-App + Quiz
 # ===========================
 
-st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
+st.set_page_config(page_title="RTW Aufgabenplan + Quiz", page_icon="🚑", layout="wide")
 
 STATUS_DATEI = "status.json"
 
@@ -119,180 +99,144 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=Fal
         else:
             st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
 
-# Aktuelles Datum und Wochentag
-heute_en = datetime.datetime.now().strftime('%A')
-heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
-heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
-feiertag_heute = feiertage_2025.get(heute_str)
 
-# Lade gespeicherten Status
-status_dict = lade_status()
+# ----------------------
+# Quiz Fragen: (Frage, [Antworten], Index korrekte Antwort)
+# ----------------------
+quiz_fragen = [
+    ("Was ist die Hauptstadt von Deutschland?", ["Berlin", "München", "Frankfurt", "Hamburg"], 0),
+    ("Welcher Planet ist der dritte von der Sonne?", ["Mars", "Venus", "Erde", "Jupiter"], 2),
+    ("Wie viele Bundesländer hat Deutschland?", ["14", "16", "18", "20"], 1),
+    ("Welcher Kontinent ist am größten?", ["Afrika", "Asien", "Europa", "Antarktika"], 1),
+    ("Wer schrieb 'Faust'?", ["Goethe", "Schiller", "Heine", "Kafka"], 0),
+    ("In welchem Jahr begann der Zweite Weltkrieg?", ["1939", "1945", "1914", "1923"], 0),
+    ("Was bedeutet 'RTW'?", ["Rettungswagen", "Rettungstransportwagen", "Rettungstaxi", "Rettungsdienst"], 0),
+    ("Welches Gas atmen wir hauptsächlich ein?", ["Sauerstoff", "Kohlenstoffdioxid", "Stickstoff", "Helium"], 2),
+    ("Wie viele Knochen hat ein erwachsener Mensch?", ["206", "201", "210", "215"], 0),
+    ("Welcher Fluss fließt durch Berlin?", ["Elbe", "Donau", "Spree", "Rhein"], 2),
+    ("Was ist die chemische Formel von Wasser?", ["CO2", "H2O", "O2", "NaCl"], 1),
+    ("Wie viele Stunden hat ein Tag?", ["12", "24", "48", "36"], 1),
+    ("Wer malte die Mona Lisa?", ["Michelangelo", "Leonardo da Vinci", "Raphael", "Donatello"], 1),
+    ("Was ist das größte Land der Welt?", ["Kanada", "China", "USA", "Russland"], 3),
+    ("Welches Element hat das Symbol 'Fe'?", ["Fluor", "Eisen", "Kupfer", "Gold"], 1),
+    ("Wie viele Planeten hat unser Sonnensystem?", ["7", "8", "9", "10"], 1),
+    ("Was ist der längste Fluss der Welt?", ["Amazonas", "Nil", "Yangtze", "Mississippi"], 1),
+    ("Welche Sprache hat die meisten Muttersprachler?", ["Englisch", "Spanisch", "Mandarin", "Hindi"], 2),
+    ("Wie viele Zähne hat ein Erwachsener normalerweise?", ["28", "30", "32", "34"], 2),
+    ("Wer entdeckte die Schwerkraft?", ["Newton", "Einstein", "Galilei", "Tesla"], 0)
+]
 
-# Seitentitel & Header
-st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
-st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
+# ----------------------
+# Session State Initialisierung
+# ----------------------
+if "quiz_active" not in st.session_state:
+    st.session_state["quiz_active"] = False
+if "quiz_index" not in st.session_state:
+    st.session_state["quiz_index"] = 0
+if "score" not in st.session_state:
+    st.session_state["score"] = 0
+if "player_name" not in st.session_state:
+    st.session_state["player_name"] = ""
+if "status_dict" not in st.session_state:
+    st.session_state["status_dict"] = lade_status()
 
-# Aufgabenbereiche in Boxen mit Farben & Überschrift und Liste
-col_ktw, col_rtw = st.columns(2)
+# ----------------------
+# Quiz Start Funktion
+# ----------------------
+def quiz_starten():
+    st.session_state["quiz_active"] = True
+    st.session_state["quiz_index"] = 0
+    st.session_state["score"] = 0
+    st.session_state["player_name"] = ""
 
-with col_ktw:
-    st.markdown("""
-    <div style="
-        background-color:#e8f5e9; 
-        border:2px solid #2e7d32; 
-        border-radius:12px; 
-        padding:20px; 
-        box-shadow: 2px 3px 8px rgba(46, 125, 50, 0.15);
-    ">
-        <h3 style='color:#2e7d32; margin-bottom:12px;'>🧾 Aufgaben KTW</h3>
-    """, unsafe_allow_html=True)
-    for aufgabe in aufgaben_ktw.get(heute_deutsch, []):
-        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="KTW", readonly=False)
-    st.markdown("</div>", unsafe_allow_html=True)
+# ----------------------
+# Quiz Stop Funktion (z.B. bei Fehler oder Ende)
+# ----------------------
+def quiz_stoppen():
+    st.session_state["quiz_active"] = False
+    # Speichere Score im Scoreboard (optional, hier lokal)
+    scoreboard = st.session_state.get("scoreboard", {})
+    name = st.session_state["player_name"] or "Unbekannt"
+    scoreboard[name] = max(scoreboard.get(name, 0), st.session_state["score"])
+    st.session_state["scoreboard"] = scoreboard
 
-with col_rtw:
-    st.markdown("""
-    <div style="
-        background-color:#ffebee; 
-        border:2px solid #c62828; 
-        border-radius:12px; 
-        padding:20px; 
-        box-shadow: 2px 3px 8px rgba(198, 40, 40, 0.15);
-    ">
-        <h3 style='color:#c62828; margin-bottom:12px;'>🚑 Aufgaben RTW</h3>
-    """, unsafe_allow_html=True)
-    for aufgabe in aufgaben_rtw.get(heute_deutsch, []):
-        aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="RTW", readonly=False)
-    st.markdown("</div>", unsafe_allow_html=True)
+# ----------------------
+# Anzeige der Quiz-Scoreboard
+# ----------------------
+def zeige_scoreboard():
+    st.write("### 🏆 Scoreboard")
+    scoreboard = st.session_state.get("scoreboard", {})
+    if not scoreboard:
+        st.write("Noch keine Einträge.")
+        return
+    sorted_scores = sorted(scoreboard.items(), key=lambda x: x[1], reverse=True)
+    for name, score in sorted_scores:
+        st.write(f"**{name}**: {score} Punkte")
 
-# Dropdown für andere Tage
-st.markdown("---")
-tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
+# ----------------------
+# Haupt-App Logik
+# ----------------------
 
-if tag_auswahl != "—":
-    st.write(f"### 🔎 Aufgaben für {tag_auswahl}")
+st.title("✔ Rettungswache Südlohn Tagesaufgaben + Quiz ✔")
+
+# Quiz Start/Stop Steuerung
+if not st.session_state["quiz_active"]:
+    st.sidebar.button("▶️ Quiz starten", on_click=quiz_starten)
+else:
+    st.sidebar.button("✖ Quiz abbrechen", on_click=quiz_stoppen)
+
+# ----------------------
+# Wenn Quiz aktiv ist, zeige Quiz
+# ----------------------
+if st.session_state["quiz_active"]:
+    st.header("🎯 Quiz")
+
+    if not st.session_state["player_name"]:
+        name = st.text_input("Bitte gib deinen Namen ein:", key="player_name")
+        if not name:
+            st.info("Bitte gib deinen Namen ein, um zu starten.")
+            st.stop()
+        else:
+            st.session_state["player_name"] = name
+
+    frage_idx = st.session_state["quiz_index"]
+    frage, antworten, korrekt_idx = quiz_fragen[frage_idx]
+
+    st.write(f"**Frage {frage_idx + 1} von {len(quiz_fragen)}:** {frage}")
+    auswahl = st.radio("Wähle die richtige Antwort:", antworten, key=f"frage_{frage_idx}")
+
+    if st.button("Antwort prüfen"):
+        if auswahl == antworten[korrekt_idx]:
+            st.success("Richtig! 🎉")
+            st.session_state["score"] += 1
+            st.session_state["quiz_index"] += 1
+            if st.session_state["quiz_index"] >= len(quiz_fragen):
+                st.balloons()
+                st.success(f"Gratulation {st.session_state['player_name']}! Du hast alle Fragen richtig beantwortet.")
+                quiz_stoppen()
+        else:
+            st.error(f"Falsch! Das Quiz ist beendet. Deine Punktzahl: {st.session_state['score']}")
+            quiz_stoppen()
+
+    st.write(f"📝 Aktueller Punktestand: {st.session_state['score']}")
+
+# ----------------------
+# Wenn Quiz nicht aktiv, zeige Aufgabenplaner
+# ----------------------
+if not st.session_state["quiz_active"]:
+    # Aktuelles Datum und Wochentag
+    heute_en = datetime.datetime.now().strftime('%A')
+    heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
+    heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
+    feiertag_heute = feiertage_2025.get(heute_str)
+
+    status_dict = st.session_state["status_dict"]
+
+    st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
+
     col_ktw, col_rtw = st.columns(2)
 
     with col_ktw:
         st.markdown("""
         <div style="
-            background-color:#e8f5e9; 
-            border:2px solid #2e7d32; 
-            border-radius:12px; 
-            padding:20px; 
-            box-shadow: 2px 3px 8px rgba(46, 125, 50, 0.15);
-        ">
-            <h3 style='color:#2e7d32; margin-bottom:12px;'>🧾 Aufgaben KTW</h3>
-        """, unsafe_allow_html=True)
-        for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
-            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="KTW", readonly=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with col_rtw:
-        st.markdown("""
-        <div style="
-            background-color:#ffebee; 
-            border:2px solid #c62828; 
-            border-radius:12px; 
-            padding:20px; 
-            box-shadow: 2px 3px 8px rgba(198, 40, 40, 0.15);
-        ">
-            <h3 style='color:#c62828; margin-bottom:12px;'>🚑 Aufgaben RTW</h3>
-        """, unsafe_allow_html=True)
-        for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
-            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="RTW", readonly=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-# Tagesinfos schön gestaltet mit 4 farbigen Boxen
-st.markdown("---")
-st.markdown("### 🌤️ Zusätzliche Tagesinfos")
-
-col1, col2, col3, col4 = st.columns(4)
-
-col1.markdown(f"""
-    <div style="
-        background:#e8f5e9; 
-        border:1.5px solid #2e7d32; 
-        border-radius:8px; 
-        padding:12px; 
-        text-align:center;
-        font-weight:bold;
-        color:#2e7d32;
-        box-shadow: 1px 1px 4px rgba(46, 125, 50, 0.15);
-    ">
-        🕒 Uhrzeit<br><span style='font-size:24px;'>{get_current_time()}</span>
-    </div>
-""", unsafe_allow_html=True)
-
-col2.markdown(f"""
-    <div style="
-        background:#ffebee; 
-        border:1.5px solid #c62828; 
-        border-radius:8px; 
-        padding:12px; 
-        text-align:center;
-        font-weight:bold;
-        color:#c62828;
-        box-shadow: 1px 1px 4px rgba(198, 40, 40, 0.15);
-    ">
-        🎉 Feiertag<br><span style='font-size:20px;'>{feiertag_heute if feiertag_heute else "Kein Feiertag heute 😟"}</span>
-    </div>
-""", unsafe_allow_html=True)
-
-col3.markdown("""
-    <div style="
-        background:#fff3e0; 
-        border:1.5px solid #f57c00; 
-        border-radius:8px; 
-        padding:12px; 
-        text-align:center;
-        font-weight:bold;
-        color:#f57c00;
-        box-shadow: 1px 1px 4px rgba(245, 124, 0, 0.15);
-    ">
-        ⚠️ Sicherheits-Check<br>
-        <span style='font-size:18px; font-weight:normal;'>
-            Vor Fahrtbeginn: Fahrzeug-Check durchführen!
-        </span>
-    </div>
-""", unsafe_allow_html=True)
-
-col4.markdown("""
-    <div style="
-        background:#ede7f6; 
-        border:1.5px solid #5e35b1; 
-        border-radius:8px; 
-        padding:12px; 
-        text-align:center;
-        font-weight:bold;
-        color:#5e35b1;
-        box-shadow: 1px 1px 4px rgba(94, 53, 177, 0.15);
-    ">
-        📌 Tipp<br><span style='font-size:18px;'>Regelmäßig Aufgaben prüfen!</span>
-    </div>
-""", unsafe_allow_html=True)
-
-# --- Quiz Teil ---
-
-quiz_fragen = [
-    ("Was bedeutet die Abkürzung RTW?", ["Rettungswagen", "Rettungsturmwagen", "Rettungsdienstwagen", "Rettungszug"], 0),
-    ("Welche Farbe hat ein Rettungswagen in Deutschland meistens?", ["Rot", "Blau", "Gelb", "Grün"], 2),
-    ("Wie viele Personen sind normalerweise im RTW-Team?", ["1", "2", "3", "4"], 1),
-    ("Was überprüft man vor Fahrtbeginn am Fahrzeug?", ["Betriebsmittel", "Fahrzeug-Check", "Tankinhalt", "Fahrersitz"], 1),
-    ("Welche Notrufnummer wählt man in Deutschland bei einem Notfall?", ["110", "112", "999", "911"], 1),
-    ("Was ist die wichtigste Maßnahme bei einer Bewusstlosigkeit?", ["Herzdruckmassage", "Beatmung", "Stabile Seitenlage", "Sauerstoffgabe"], 2),
-    ("Welche Atemfrequenz gilt als normal bei Erwachsenen?", ["12-20 pro Minute", "25-30 pro Minute", "5-10 pro Minute", "30-40 pro Minute"], 0),
-    ("Was macht man bei einem Knochenbruch?", ["Schnell bewegen", "Kühlen und ruhigstellen", "Massage", "Wärmen"], 1),
-    ("Was bedeutet 'BZ Kontrolle'?", ["Blutzuckerkontrolle", "Blutdruckmessung", "Beatmungskontrolle", "Bewegungskontrolle"], 0),
-    ("Wie nennt man das Gerät zur Sauerstoffgabe?", ["O2 Schlauch", "Beatmungsbeutel", "Sauerstoffmaske", "Atemgerät"], 2),
-    ("Welches Mittel verwendet man zur Desinfektion?", ["Alkohol", "Wasser", "Seife", "Öl"], 0),
-    ("Was ist die stabile Seitenlage?", ["Lagerung zur Vermeidung von Aspiration", "Lagerung bei Herzinfarkt", "Lagerung bei Verbrennung", "Lagerung bei Knochenbruch"], 0),
-    ("Wann sollte man eine Herzdruckmassage beginnen?", ["Bei Puls", "Bei Atemstillstand", "Bei Bewusstlosigkeit", "Bei Schmerzen"], 1),
-    ("Wie oft sollte man Herzdruckmassage pro Minute durchführen?", ["50-70", "100-120", "130-150", "70-90"], 1),
-    ("Was bedeutet die Abkürzung BZ?", ["Blutzucker", "Blutdruck", "Beatmung", "Bewusstseinszustand"], 0),
-    ("Was ist bei einer O2-Flasche zu prüfen?", ["Füllstand und Druck", "Gewicht", "Farbe", "Form"], 0),
-    ("Was ist ein Notfall?", ["Krankheit", "Bedrohung für Leben oder Gesundheit", "Routinekontrolle", "Arztbesuch"], 1),
-    ("Was sollte man bei einer Verbrennung als Erstes tun?", ["Kühlen", "Wärmen", "Eincremen", "Abdecken"], 0),
-    ("Was macht man, wenn jemand nicht mehr atmet?", ["Beatmen", "Laufen lassen", "Schütteln", "Wasser geben"], 0),
-    ("Was bedeutet die Abkürzung KTW?", ["Krankentransportwagen", "Kindertransportwagen", "Katastrophentransportwagen", "Krafttransportwagen"], 0)
-]
+            background-color
