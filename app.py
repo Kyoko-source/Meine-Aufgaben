@@ -5,11 +5,9 @@ import json
 import os
 import hashlib
 
-# ===========================
-# ✅ RTW/KTW Aufgaben-App + Quiz
-# ===========================
-
-st.set_page_config(page_title="RTW Aufgabenplan + Quiz", page_icon="🚑", layout="wide")
+# -----------------------
+# Konstanten und Daten
+# -----------------------
 
 STATUS_DATEI = "status.json"
 
@@ -61,48 +59,6 @@ feiertage_2025 = {
     "26.12.2025": "2. Weihnachtstag"
 }
 
-def get_current_time():
-    timezone = pytz.timezone('Europe/Berlin')
-    return datetime.datetime.now(timezone).strftime('%H:%M:%S')
-
-def lade_status():
-    if os.path.exists(STATUS_DATEI):
-        with open(STATUS_DATEI, "r") as f:
-            return json.load(f)
-    return {}
-
-def speichere_status(status_dict):
-    with open(STATUS_DATEI, "w") as f:
-        json.dump(status_dict, f)
-
-def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=False):
-    jahr, kalenderwoche, _ = datetime.datetime.now().isocalendar()
-    raw_key = f"{fahrzeug}_{wochentag}_{jahr}_{kalenderwoche}_{aufgabe}"
-    key_hash = hashlib.md5(raw_key.encode()).hexdigest()
-    checked = status_dict.get(key_hash, False)
-
-    if readonly:
-        if checked:
-            st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
-    else:
-        neu_gesetzt = st.checkbox("", value=checked, key=key_hash)
-        if neu_gesetzt != checked:
-            status_dict[key_hash] = neu_gesetzt
-            speichere_status(status_dict)
-            if neu_gesetzt:
-                st.balloons()
-
-        if neu_gesetzt:
-            st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
-
-
-# ----------------------
-# Quiz Fragen: (Frage, [Antworten], Index korrekte Antwort)
-# ----------------------
 quiz_fragen = [
     ("Was ist die Hauptstadt von Deutschland?", ["Berlin", "München", "Frankfurt", "Hamburg"], 0),
     ("Welcher Planet ist der dritte von der Sonne?", ["Mars", "Venus", "Erde", "Jupiter"], 2),
@@ -126,9 +82,42 @@ quiz_fragen = [
     ("Wer entdeckte die Schwerkraft?", ["Newton", "Einstein", "Galilei", "Tesla"], 0)
 ]
 
-# ----------------------
-# Session State Initialisierung
-# ----------------------
+# -----------------------
+# Hilfsfunktionen
+# -----------------------
+
+def lade_status():
+    if os.path.exists(STATUS_DATEI):
+        with open(STATUS_DATEI, "r") as f:
+            return json.load(f)
+    return {}
+
+def speichere_status(status_dict):
+    with open(STATUS_DATEI, "w") as f:
+        json.dump(status_dict, f)
+
+def aufgabe_key(fahrzeug, wochentag, aufgabe):
+    jahr, kw, _ = datetime.datetime.now().isocalendar()
+    raw_key = f"{fahrzeug}_{wochentag}_{jahr}_{kw}_{aufgabe}"
+    return hashlib.md5(raw_key.encode()).hexdigest()
+
+def aufgabe_checkbox(aufgabe, fahrzeug, wochentag, status_dict):
+    key = aufgabe_key(fahrzeug, wochentag, aufgabe)
+    checked = status_dict.get(key, False)
+    neu = st.checkbox(aufgabe, value=checked, key=key)
+    if neu != checked:
+        status_dict[key] = neu
+        speichere_status(status_dict)
+        if neu:
+            st.balloons()
+
+# -----------------------
+# Session State Setup
+# -----------------------
+
+if "status_dict" not in st.session_state:
+    st.session_state["status_dict"] = lade_status()
+
 if "quiz_active" not in st.session_state:
     st.session_state["quiz_active"] = False
 if "quiz_index" not in st.session_state:
@@ -137,106 +126,104 @@ if "score" not in st.session_state:
     st.session_state["score"] = 0
 if "player_name" not in st.session_state:
     st.session_state["player_name"] = ""
-if "status_dict" not in st.session_state:
-    st.session_state["status_dict"] = lade_status()
+if "scoreboard" not in st.session_state:
+    st.session_state["scoreboard"] = {}
 
-# ----------------------
-# Quiz Start Funktion
-# ----------------------
+# -----------------------
+# Quiz Funktionen
+# -----------------------
+
 def quiz_starten():
     st.session_state["quiz_active"] = True
     st.session_state["quiz_index"] = 0
     st.session_state["score"] = 0
     st.session_state["player_name"] = ""
 
-# ----------------------
-# Quiz Stop Funktion (z.B. bei Fehler oder Ende)
-# ----------------------
-def quiz_stoppen():
+def quiz_beenden():
     st.session_state["quiz_active"] = False
-    # Speichere Score im Scoreboard (optional, hier lokal)
-    scoreboard = st.session_state.get("scoreboard", {})
     name = st.session_state["player_name"] or "Unbekannt"
-    scoreboard[name] = max(scoreboard.get(name, 0), st.session_state["score"])
-    st.session_state["scoreboard"] = scoreboard
+    punkte = st.session_state["score"]
+    if name in st.session_state["scoreboard"]:
+        if punkte > st.session_state["scoreboard"][name]:
+            st.session_state["scoreboard"][name] = punkte
+    else:
+        st.session_state["scoreboard"][name] = punkte
 
-# ----------------------
-# Anzeige der Quiz-Scoreboard
-# ----------------------
 def zeige_scoreboard():
     st.write("### 🏆 Scoreboard")
-    scoreboard = st.session_state.get("scoreboard", {})
-    if not scoreboard:
+    if not st.session_state["scoreboard"]:
         st.write("Noch keine Einträge.")
         return
-    sorted_scores = sorted(scoreboard.items(), key=lambda x: x[1], reverse=True)
-    for name, score in sorted_scores:
+    sortiert = sorted(st.session_state["scoreboard"].items(), key=lambda x: x[1], reverse=True)
+    for name, score in sortiert:
         st.write(f"**{name}**: {score} Punkte")
 
-# ----------------------
-# Haupt-App Logik
-# ----------------------
+# -----------------------
+# Haupt UI
+# -----------------------
 
-st.title("✔ Rettungswache Südlohn Tagesaufgaben + Quiz ✔")
+st.title("🚑 RTW & KTW Aufgaben + Quiz 🚑")
 
-# Quiz Start/Stop Steuerung
 if not st.session_state["quiz_active"]:
-    st.sidebar.button("▶️ Quiz starten", on_click=quiz_starten)
-else:
-    st.sidebar.button("✖ Quiz abbrechen", on_click=quiz_stoppen)
+    if st.sidebar.button("▶️ Quiz starten"):
+        quiz_starten()
 
-# ----------------------
-# Wenn Quiz aktiv ist, zeige Quiz
-# ----------------------
 if st.session_state["quiz_active"]:
     st.header("🎯 Quiz")
-
     if not st.session_state["player_name"]:
-        name = st.text_input("Bitte gib deinen Namen ein:", key="player_name")
-        if not name:
-            st.info("Bitte gib deinen Namen ein, um zu starten.")
-            st.stop()
+        name_input = st.text_input("Bitte gib deinen Namen ein:", key="eingabe_name")
+        if name_input:
+            st.session_state["player_name"] = name_input
         else:
-            st.session_state["player_name"] = name
+            st.info("Bitte Namen eingeben, um das Quiz zu starten.")
+            st.stop()
 
-    frage_idx = st.session_state["quiz_index"]
-    frage, antworten, korrekt_idx = quiz_fragen[frage_idx]
+    idx = st.session_state["quiz_index"]
+    frage, antworten, korrekt = quiz_fragen[idx]
 
-    st.write(f"**Frage {frage_idx + 1} von {len(quiz_fragen)}:** {frage}")
-    auswahl = st.radio("Wähle die richtige Antwort:", antworten, key=f"frage_{frage_idx}")
+    st.write(f"**Frage {idx+1} von {len(quiz_fragen)}:** {frage}")
+    antwort = st.radio("Antwort auswählen:", antworten, key=f"frage_{idx}")
 
     if st.button("Antwort prüfen"):
-        if auswahl == antworten[korrekt_idx]:
+        if antwort == antworten[korrekt]:
             st.success("Richtig! 🎉")
             st.session_state["score"] += 1
             st.session_state["quiz_index"] += 1
             if st.session_state["quiz_index"] >= len(quiz_fragen):
                 st.balloons()
-                st.success(f"Gratulation {st.session_state['player_name']}! Du hast alle Fragen richtig beantwortet.")
-                quiz_stoppen()
+                st.success(f"Herzlichen Glückwunsch {st.session_state['player_name']}! Du hast alle Fragen richtig beantwortet.")
+                quiz_beenden()
         else:
-            st.error(f"Falsch! Das Quiz ist beendet. Deine Punktzahl: {st.session_state['score']}")
-            quiz_stoppen()
+            st.error(f"Falsch! Quiz beendet. Deine Punktzahl: {st.session_state['score']}")
+            quiz_beenden()
 
-    st.write(f"📝 Aktueller Punktestand: {st.session_state['score']}")
+    st.write(f"📊 Aktueller Punktestand: {st.session_state['score']}")
 
-# ----------------------
-# Wenn Quiz nicht aktiv, zeige Aufgabenplaner
-# ----------------------
-if not st.session_state["quiz_active"]:
-    # Aktuelles Datum und Wochentag
-    heute_en = datetime.datetime.now().strftime('%A')
-    heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
-    heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
-    feiertag_heute = feiertage_2025.get(heute_str)
+else:
+    # Aufgabenplaner
 
-    status_dict = st.session_state["status_dict"]
+    heute = datetime.datetime.now(pytz.timezone('Europe/Berlin'))
+    heute_en = heute.strftime("%A")
+    heute_de = tage_uebersetzung.get(heute_en, heute_en)
+    datum = heute.strftime("%d.%m.%Y")
+    feiertag = feiertage_2025.get(datum)
 
-    st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
+    st.subheader(f"Heute ist {heute_de} ({datum})")
 
-    col_ktw, col_rtw = st.columns(2)
+    col1, col2 = st.columns(2)
 
-    with col_ktw:
-        st.markdown("""
-        <div style="
-            background-color
+    with col1:
+        st.markdown("### 🚑 RTW Aufgaben")
+        for aufgabe in aufgaben_rtw.get(heute_de, []):
+            aufgabe_checkbox(aufgabe, "RTW", heute_de, st.session_state["status_dict"])
+
+    with col2:
+        st.markdown("### 🚐 KTW Aufgaben")
+        for aufgabe in aufgaben_ktw.get(heute_de, []):
+            aufgabe_checkbox(aufgabe, "KTW", heute_de, st.session_state["status_dict"])
+
+    if feiertag:
+        st.info(f"Heute ist Feiertag: {feiertag}")
+
+    st.markdown("---")
+    zeige_scoreboard()
