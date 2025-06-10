@@ -239,41 +239,62 @@ col2.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-col3.markdown(f"""
+col3.markdown("""
     <div style="
-        background:#e3f2fd; 
-        border:1.5px solid #1565c0; 
+        background:#fff3e0; 
+        border:1.5px solid #f57c00; 
         border-radius:8px; 
         padding:12px; 
         text-align:center;
         font-weight:bold;
-        color:#1565c0;
-        box-shadow: 1px 1px 4px rgba(21, 101, 192, 0.15);
+        color:#f57c00;
+        box-shadow: 1px 1px 4px rgba(245, 124, 0, 0.15);
     ">
-        📅 Wochentag<br><span style='font-size:24px;'>{heute_deutsch}</span>
+        ⚠️ Sicherheits-Check<br>
+        <span style='font-size:18px; font-weight:normal;'>
+            Vor Fahrtbeginn: Fahrzeug-Check durchführen!
+        </span>
     </div>
 """, unsafe_allow_html=True)
 
-# 4. Box mit Quiz
-with col4:
-    st.markdown("""
-    <div style="
-        background:#fff3e0;
-        border:1.5px solid #ef6c00;
-        border-radius:8px;
-        padding:12px;
-        text-align:center;
-        font-weight:bold;
-        color:#ef6c00;
-        box-shadow: 1px 1px 4px rgba(239, 108, 0, 0.15);
-    ">
-        🧠 Quizzeit!
-    </div>
-    """, unsafe_allow_html=True)
+# --- QUIZ IN DER 4. BOX ---
 
-    # Quiz-Fragen + Logik
-    quiz_fragen = [
-        {"frage": "Wie viele Tage hat eine Woche?", "optionen": ["5", "6", "7", "8"], "antwort": "7"},
-        {"frage": "Wie viele Stunden hat ein Tag?", "optionen": ["20", "24", "30", "12"], "antwort": "24"},
-        {"frage": "Welches Fahrzeug ist für den Rettungsdienst typisch?", "optionen": ["RTW", "KTW", "PKW", "LKW"], "antwort": "RTW"},
-        {"frage": "Was sollte vor Fahrtbeginn geprüft werden?", "option
+# Quiz Fragen
+quiz_fragen = [
+    {
+        "frage": "Was sollte vor Fahrtbeginn geprüft werden?",
+        "optionen": ["Reifen", "Motoröl", "Bremsen", "Alle oben genannten"],
+        "antwort": 3
+    },
+    {
+        "frage": "Wie oft müssen die Feuerlöscher kontrolliert werden?",
+        "optionen": ["Jährlich", "Alle 2 Jahre", "Alle 5 Jahre", "Nie"],
+        "antwort": 0
+    },
+    {
+        "frage": "Welche Farbe hat der Rettungswagen?",
+        "optionen": ["Rot", "Gelb", "Blau", "Grün"],
+        "antwort": 1
+    },
+    {
+        "frage": "Was bedeutet das Martinshorn?",
+        "optionen": ["Gefahr", "Rettungseinsatz", "Unfall", "Alarm"],
+        "antwort": 1
+    },
+    {
+        "frage": "Wie viele Personen dürfen im KTW sitzen?",
+        "optionen": ["2", "4", "6", "8"],
+        "antwort": 2
+    },
+    {
+        "frage": "Was ist die wichtigste Aufgabe des RTW?",
+        "optionen": ["Patiententransport", "Patientenversorgung", "Fahrzeugpflege", "Kommunikation"],
+        "antwort": 1
+    },
+    {
+        "frage": "Wann wird der Notarzt hinzugezogen?",
+        "optionen": ["Bei jedem Einsatz", "Nur bei schweren Verletzungen", "Nie", "Bei Unfall mit mehreren Verletzten"],
+        "antwort": 1
+    },
+    {
+        "frage": "Was muss nach jedem
