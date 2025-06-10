@@ -239,5 +239,41 @@ col2.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-col3.markdown("""
-    <
+col3.markdown(f"""
+    <div style="
+        background:#e3f2fd; 
+        border:1.5px solid #1565c0; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#1565c0;
+        box-shadow: 1px 1px 4px rgba(21, 101, 192, 0.15);
+    ">
+        📅 Wochentag<br><span style='font-size:24px;'>{heute_deutsch}</span>
+    </div>
+""", unsafe_allow_html=True)
+
+# 4. Box mit Quiz
+with col4:
+    st.markdown("""
+    <div style="
+        background:#fff3e0;
+        border:1.5px solid #ef6c00;
+        border-radius:8px;
+        padding:12px;
+        text-align:center;
+        font-weight:bold;
+        color:#ef6c00;
+        box-shadow: 1px 1px 4px rgba(239, 108, 0, 0.15);
+    ">
+        🧠 Quizzeit!
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Quiz-Fragen + Logik
+    quiz_fragen = [
+        {"frage": "Wie viele Tage hat eine Woche?", "optionen": ["5", "6", "7", "8"], "antwort": "7"},
+        {"frage": "Wie viele Stunden hat ein Tag?", "optionen": ["20", "24", "30", "12"], "antwort": "24"},
+        {"frage": "Welches Fahrzeug ist für den Rettungsdienst typisch?", "optionen": ["RTW", "KTW", "PKW", "LKW"], "antwort": "RTW"},
+        {"frage": "Was sollte vor Fahrtbeginn geprüft werden?", "option
