@@ -5,7 +5,7 @@ import json
 import os
 import hashlib
 
-# 🔒 Verbesserte Passwortabfrage – zentriert & gestylt
+# Passwortabfrage
 def check_password():
     def password_entered():
         if st.session_state["password"] == "RettSüd15":
@@ -22,12 +22,7 @@ def check_password():
             st.text_input("Passwort", type="password", on_change=password_entered, key="password")
         st.stop()
 
-# Passwortprüfung zuerst ausführen
 check_password()
-
-# ===========================
-# ✅ RTW/KTW Aufgaben-App
-# ===========================
 
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 
@@ -81,10 +76,6 @@ feiertage_2025 = {
     "26.12.2025": "2. Weihnachtstag"
 }
 
-def get_current_time():
-    timezone = pytz.timezone('Europe/Berlin')
-    return datetime.datetime.now(timezone).strftime('%H:%M:%S')
-
 def lade_status():
     if os.path.exists(STATUS_DATEI):
         with open(STATUS_DATEI, "r") as f:
@@ -119,7 +110,7 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=Fal
         else:
             st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
 
-# === Quiz-Daten (20 Fragen) ===
+# Quiz mit 20 Fragen
 quiz_fragen = [
     {"frage": "Was ist die Hauptstadt von Deutschland?", "optionen": ["Berlin", "München", "Köln", "Hamburg"], "korrekt": "Berlin"},
     {"frage": "Wie viele Kontinente gibt es?", "optionen": ["5", "6", "7", "8"], "korrekt": "7"},
@@ -176,7 +167,7 @@ def scoreboard_eingabe():
     if st.button("Name speichern"):
         if name.strip():
             st.success(f"Vielen Dank, {name}! Dein Ergebnis wurde gespeichert.")
-            # Hier kannst du Scoreboard-Logik ergänzen (z.B. speichern in Datei)
+            # Hier könnte man Scoreboard speichern, z.B. in eine Datei oder DB
         else:
             st.error("Bitte gib einen gültigen Namen ein.")
 
@@ -193,10 +184,11 @@ status_dict = lade_status()
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
-# Aufgabenbereiche in Boxen mit Farben & Überschrift und Liste
-col_ktw, col_rtw = st.columns(2)
+# Vier Kästchen (2 Reihen x 2 Spalten)
+col1, col2 = st.columns(2)
 
-with col_ktw:
+# 1. Kasten: KTW Aufgaben (grün)
+with col1:
     st.markdown("""
     <div style="
         background-color:#e8f5e9; 
@@ -204,6 +196,7 @@ with col_ktw:
         border-radius:12px; 
         padding:20px; 
         box-shadow: 2px 3px 8px rgba(46, 125, 50, 0.15);
+        margin-bottom: 10px;
     ">
         <h3 style='color:#2e7d32; margin-bottom:12px;'>🧾 Aufgaben KTW</h3>
     """, unsafe_allow_html=True)
@@ -211,7 +204,8 @@ with col_ktw:
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="KTW", readonly=False)
     st.markdown("</div>", unsafe_allow_html=True)
 
-with col_rtw:
+# 2. Kasten: RTW Aufgaben (rot)
+with col2:
     st.markdown("""
     <div style="
         background-color:#ffebee; 
@@ -219,6 +213,7 @@ with col_rtw:
         border-radius:12px; 
         padding:20px; 
         box-shadow: 2px 3px 8px rgba(198, 40, 40, 0.15);
+        margin-bottom: 10px;
     ">
         <h3 style='color:#c62828; margin-bottom:12px;'>🚑 Aufgaben RTW</h3>
     """, unsafe_allow_html=True)
@@ -226,6 +221,58 @@ with col_rtw:
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="RTW", readonly=False)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Dropdown für andere Tage
+# 3. Kasten: Feiertag / Info (grau)
+with col1:
+    st.markdown("""
+    <div style="
+        background-color:#f5f5f5;
+        border:2px solid #b0bec5;
+        border-radius:12px;
+        padding:20px;
+        box-shadow: 2px 3px 8px rgba(176, 190, 197, 0.15);
+    ">
+        <h3 style='color:#37474f; margin-bottom:12px;'>ℹ️ Info</h3>
+    """, unsafe_allow_html=True)
+    if feiertag_heute:
+        st.success(f"Heute ist Feiertag: {feiertag_heute} 🎉")
+    else:
+        st.info("Heute ist kein Feiertag.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# 4. Kasten: Quiz (blau) - hier wird das Quiz eingebaut
+with col2:
+    st.markdown("""
+    <div style="
+        background-color:#e3f2fd;
+        border:2px solid #1565c0;
+        border-radius:12px;
+        padding:20px;
+        box-shadow: 2px 3px 8px rgba(21, 101, 192, 0.15);
+    ">
+        <h3 style='color:#1565c0; margin-bottom:12px;'>❓ Quiz Allgemeinwissen</h3>
+    """, unsafe_allow_html=True)
+    if not st.session_state.quiz_beendet:
+        quiz_start()
+    else:
+        scoreboard_eingabe()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# Dropdown zur Ansicht anderer Wochentage (readonly)
 st.markdown("---")
-tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values
+tag_auswahl = st.selectbox(
+    "📌 Wähle einen anderen Wochentag zur Ansicht:",
+    ["—"] + list(tage_uebersetzung.values())
+)
+
+if tag_auswahl and tag_auswahl != "—":
+    st.markdown(f"### Aufgaben am {tag_auswahl}")
+
+    col1_other, col2_other = st.columns(2)
+    with col1_other:
+        st.markdown(f"**🧾 KTW Aufgaben am {tag_auswahl}:**")
+        for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
+            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="KTW", readonly=True)
+    with col2_other:
+        st.markdown(f"**🚑 RTW Aufgaben am {tag_auswahl}:**")
+        for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
+            aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="RTW", readonly=True)
