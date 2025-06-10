@@ -267,19 +267,23 @@ def quiz_starten():
     quiz_fragen = [
         {"frage": "Wie viele Aufgaben hat der KTW am Montag?", "optionen": ["2", "3", "4"], "antwort": "2"},
         {"frage": "Was sollte vor Fahrtbeginn geprüft werden?", "optionen": ["Motoröl", "Fahrzeug-Check", "Reifenluftdruck"], "antwort": "Fahrzeug-Check"},
-        # ... weitere Fragen hier ...
+        # Hier kannst du weitere Fragen ergänzen...
     ]
 
+    # Initialisiere session_state Variablen falls noch nicht vorhanden
     if "quiz_index" not in st.session_state:
         st.session_state.quiz_index = 0
+    if "quiz_score" not in st.session_state:
         st.session_state.quiz_score = 0
+    if "quiz_beendet" not in st.session_state:
         st.session_state.quiz_beendet = False
+    if "quiz_aktiv" not in st.session_state:
+        st.session_state.quiz_aktiv = True  # ob das Quiz gerade läuft
 
     if st.session_state.quiz_beendet:
         st.success(f"Quiz beendet! Deine Punktzahl: {st.session_state.quiz_score} von {len(quiz_fragen)}")
         name = st.text_input("Gib deinen Namen für das Scoreboard ein:", key="quiz_name")
         if name and st.button("Score speichern"):
-            # Hier kannst du Score speichern (z.B. in Datei oder Datenbank)
             st.write(f"Score von {name} mit {st.session_state.quiz_score} Punkten gespeichert!")
             # Reset Quiz Status falls gewünscht
             st.session_state.quiz_aktiv = False
@@ -300,6 +304,7 @@ def quiz_starten():
                 st.session_state.quiz_beendet = True
         else:
             st.session_state.quiz_beendet = True
+
 
 
 with col4:
