@@ -5,7 +5,7 @@ import json
 import os
 import hashlib
 
-# Passwortabfrage
+# 🔒 Verbesserte Passwortabfrage – zentriert & gestylt
 def check_password():
     def password_entered():
         if st.session_state["password"] == "RettSüd15":
@@ -22,7 +22,12 @@ def check_password():
             st.text_input("Passwort", type="password", on_change=password_entered, key="password")
         st.stop()
 
+# Passwortprüfung zuerst ausführen
 check_password()
+
+# ===========================
+# ✅ RTW/KTW Aufgaben-App
+# ===========================
 
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 
@@ -76,6 +81,10 @@ feiertage_2025 = {
     "26.12.2025": "2. Weihnachtstag"
 }
 
+def get_current_time():
+    timezone = pytz.timezone('Europe/Berlin')
+    return datetime.datetime.now(timezone).strftime('%H:%M:%S')
+
 def lade_status():
     if os.path.exists(STATUS_DATEI):
         with open(STATUS_DATEI, "r") as f:
@@ -110,67 +119,6 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=Fal
         else:
             st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
 
-# Quiz mit 20 Fragen
-quiz_fragen = [
-    {"frage": "Was ist die Hauptstadt von Deutschland?", "optionen": ["Berlin", "München", "Köln", "Hamburg"], "korrekt": "Berlin"},
-    {"frage": "Wie viele Kontinente gibt es?", "optionen": ["5", "6", "7", "8"], "korrekt": "7"},
-    {"frage": "Wer schrieb 'Faust'?", "optionen": ["Goethe", "Schiller", "Heine", "Lessing"], "korrekt": "Goethe"},
-    {"frage": "Was ist das chemische Symbol für Wasser?", "optionen": ["H2O", "O2", "CO2", "NaCl"], "korrekt": "H2O"},
-    {"frage": "Wie viele Planeten hat unser Sonnensystem?", "optionen": ["7", "8", "9", "10"], "korrekt": "8"},
-    {"frage": "Wer malte die Mona Lisa?", "optionen": ["Michelangelo", "Leonardo da Vinci", "Raphael", "Rembrandt"], "korrekt": "Leonardo da Vinci"},
-    {"frage": "Was ist die größte Wüste der Welt?", "optionen": ["Sahara", "Arabische Wüste", "Gobi", "Antarktische Wüste"], "korrekt": "Antarktische Wüste"},
-    {"frage": "Wie viele Bundesländer hat Deutschland?", "optionen": ["14", "15", "16", "17"], "korrekt": "16"},
-    {"frage": "Wer war der erste Mensch auf dem Mond?", "optionen": ["Neil Armstrong", "Buzz Aldrin", "Yuri Gagarin", "Michael Collins"], "korrekt": "Neil Armstrong"},
-    {"frage": "Welche Sprache hat die meisten Muttersprachler?", "optionen": ["Englisch", "Mandarin", "Spanisch", "Hindi"], "korrekt": "Mandarin"},
-    {"frage": "Wie heißt das kleinste Knochen im menschlichen Körper?", "optionen": ["Steigbügel", "Hammer", "Amboss", "Elle"], "korrekt": "Steigbügel"},
-    {"frage": "Welcher Planet ist der heißeste in unserem Sonnensystem?", "optionen": ["Venus", "Merkur", "Mars", "Jupiter"], "korrekt": "Venus"},
-    {"frage": "Wie viele Tage hat ein Schaltjahr?", "optionen": ["365", "366", "367", "364"], "korrekt": "366"},
-    {"frage": "Wer entdeckte die Relativitätstheorie?", "optionen": ["Isaac Newton", "Albert Einstein", "Galileo Galilei", "Nikola Tesla"], "korrekt": "Albert Einstein"},
-    {"frage": "Was ist die Währung in Japan?", "optionen": ["Yen", "Won", "Dollar", "Euro"], "korrekt": "Yen"},
-    {"frage": "Welches Land gewann die Fußball-Weltmeisterschaft 2014?", "optionen": ["Brasilien", "Deutschland", "Argentinien", "Spanien"], "korrekt": "Deutschland"},
-    {"frage": "Welches Tier ist das größte Landsäugetier?", "optionen": ["Giraffe", "Elefant", "Nashorn", "Nilpferd"], "korrekt": "Elefant"},
-    {"frage": "Wie viele Tasten hat ein klassisches Klavier?", "optionen": ["88", "76", "61", "100"], "korrekt": "88"},
-    {"frage": "Was bedeutet das lateinische Wort 'Aqua'?", "optionen": ["Feuer", "Erde", "Wasser", "Luft"], "korrekt": "Wasser"},
-    {"frage": "In welchem Jahr fiel die Berliner Mauer?", "optionen": ["1987", "1989", "1991", "1993"], "korrekt": "1989"},
-]
-
-if "quiz_index" not in st.session_state:
-    st.session_state.quiz_index = 0
-if "quiz_beendet" not in st.session_state:
-    st.session_state.quiz_beendet = False
-if "quiz_name" not in st.session_state:
-    st.session_state.quiz_name = ""
-
-def quiz_start():
-    fragen_index = st.session_state.quiz_index
-    frage = quiz_fragen[fragen_index]
-    st.markdown(f"**Frage {fragen_index + 1} von {len(quiz_fragen)}:** {frage['frage']}")
-    antwort = st.radio("Wähle deine Antwort:", frage["optionen"], key=f"frage_{fragen_index}")
-
-    if st.button("Antwort bestätigen"):
-        if antwort == frage["korrekt"]:
-            if fragen_index + 1 == len(quiz_fragen):
-                st.success("🎉 Herzlichen Glückwunsch! Du hast alle Fragen richtig beantwortet!")
-                st.session_state.quiz_beendet = True
-            else:
-                st.session_state.quiz_index += 1
-                st.experimental_rerun()
-        else:
-            st.error(f"❌ Falsch! Die richtige Antwort wäre: {frage['korrekt']}")
-            st.session_state.quiz_beendet = True
-            st.experimental_rerun()
-
-def scoreboard_eingabe():
-    st.markdown("## Das Quiz ist beendet.")
-    name = st.text_input("Bitte gib deinen Namen für das Scoreboard ein:", value=st.session_state.quiz_name)
-    st.session_state.quiz_name = name
-    if st.button("Name speichern"):
-        if name.strip():
-            st.success(f"Vielen Dank, {name}! Dein Ergebnis wurde gespeichert.")
-            # Hier könnte man Scoreboard speichern, z.B. in eine Datei oder DB
-        else:
-            st.error("Bitte gib einen gültigen Namen ein.")
-
 # Aktuelles Datum und Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
 heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
@@ -184,11 +132,10 @@ status_dict = lade_status()
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
-# Vier Kästchen (2 Reihen x 2 Spalten)
-col1, col2 = st.columns(2)
+# Aufgabenbereiche in Boxen mit Farben & Überschrift und Liste
+col_ktw, col_rtw = st.columns(2)
 
-# 1. Kasten: KTW Aufgaben (grün)
-with col1:
+with col_ktw:
     st.markdown("""
     <div style="
         background-color:#e8f5e9; 
@@ -196,7 +143,6 @@ with col1:
         border-radius:12px; 
         padding:20px; 
         box-shadow: 2px 3px 8px rgba(46, 125, 50, 0.15);
-        margin-bottom: 10px;
     ">
         <h3 style='color:#2e7d32; margin-bottom:12px;'>🧾 Aufgaben KTW</h3>
     """, unsafe_allow_html=True)
@@ -204,8 +150,7 @@ with col1:
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="KTW", readonly=False)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# 2. Kasten: RTW Aufgaben (rot)
-with col2:
+with col_rtw:
     st.markdown("""
     <div style="
         background-color:#ffebee; 
@@ -213,7 +158,6 @@ with col2:
         border-radius:12px; 
         padding:20px; 
         box-shadow: 2px 3px 8px rgba(198, 40, 40, 0.15);
-        margin-bottom: 10px;
     ">
         <h3 style='color:#c62828; margin-bottom:12px;'>🚑 Aufgaben RTW</h3>
     """, unsafe_allow_html=True)
@@ -221,58 +165,109 @@ with col2:
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="RTW", readonly=False)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# 3. Kasten: Feiertag / Info (grau)
-with col1:
-    st.markdown("""
-    <div style="
-        background-color:#f5f5f5;
-        border:2px solid #b0bec5;
-        border-radius:12px;
-        padding:20px;
-        box-shadow: 2px 3px 8px rgba(176, 190, 197, 0.15);
-    ">
-        <h3 style='color:#37474f; margin-bottom:12px;'>ℹ️ Info</h3>
-    """, unsafe_allow_html=True)
-    if feiertag_heute:
-        st.success(f"Heute ist Feiertag: {feiertag_heute} 🎉")
-    else:
-        st.info("Heute ist kein Feiertag.")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# 4. Kasten: Quiz (blau) - hier wird das Quiz eingebaut
-with col2:
-    st.markdown("""
-    <div style="
-        background-color:#e3f2fd;
-        border:2px solid #1565c0;
-        border-radius:12px;
-        padding:20px;
-        box-shadow: 2px 3px 8px rgba(21, 101, 192, 0.15);
-    ">
-        <h3 style='color:#1565c0; margin-bottom:12px;'>❓ Quiz Allgemeinwissen</h3>
-    """, unsafe_allow_html=True)
-    if not st.session_state.quiz_beendet:
-        quiz_start()
-    else:
-        scoreboard_eingabe()
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# Dropdown zur Ansicht anderer Wochentage (readonly)
+# Dropdown für andere Tage
 st.markdown("---")
-tag_auswahl = st.selectbox(
-    "📌 Wähle einen anderen Wochentag zur Ansicht:",
-    ["—"] + list(tage_uebersetzung.values())
-)
+tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
-if tag_auswahl and tag_auswahl != "—":
-    st.markdown(f"### Aufgaben am {tag_auswahl}")
+if tag_auswahl != "—":
+    st.write(f"### 🔎 Aufgaben für {tag_auswahl}")
+    col_ktw, col_rtw = st.columns(2)
 
-    col1_other, col2_other = st.columns(2)
-    with col1_other:
-        st.markdown(f"**🧾 KTW Aufgaben am {tag_auswahl}:**")
+    with col_ktw:
+        st.markdown("""
+        <div style="
+            background-color:#e8f5e9; 
+            border:2px solid #2e7d32; 
+            border-radius:12px; 
+            padding:20px; 
+            box-shadow: 2px 3px 8px rgba(46, 125, 50, 0.15);
+        ">
+            <h3 style='color:#2e7d32; margin-bottom:12px;'>🧾 Aufgaben KTW</h3>
+        """, unsafe_allow_html=True)
         for aufgabe in aufgaben_ktw.get(tag_auswahl, []):
             aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="KTW", readonly=True)
-    with col2_other:
-        st.markdown(f"**🚑 RTW Aufgaben am {tag_auswahl}:**")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with col_rtw:
+        st.markdown("""
+        <div style="
+            background-color:#ffebee; 
+            border:2px solid #c62828; 
+            border-radius:12px; 
+            padding:20px; 
+            box-shadow: 2px 3px 8px rgba(198, 40, 40, 0.15);
+        ">
+            <h3 style='color:#c62828; margin-bottom:12px;'>🚑 Aufgaben RTW</h3>
+        """, unsafe_allow_html=True)
         for aufgabe in aufgaben_rtw.get(tag_auswahl, []):
             aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="RTW", readonly=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+# Tagesinfos schön gestaltet mit 4 farbigen Boxen
+st.markdown("---")
+st.markdown("### 🌤️ Zusätzliche Tagesinfos")
+
+col1, col2, col3, col4 = st.columns(4)
+
+col1.markdown(f"""
+    <div style="
+        background:#e8f5e9; 
+        border:1.5px solid #2e7d32; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#2e7d32;
+        box-shadow: 1px 1px 4px rgba(46, 125, 50, 0.15);
+    ">
+        🕒 Uhrzeit<br><span style='font-size:24px;'>{get_current_time()}</span>
+    </div>
+""", unsafe_allow_html=True)
+
+col2.markdown(f"""
+    <div style="
+        background:#ffebee; 
+        border:1.5px solid #c62828; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#c62828;
+        box-shadow: 1px 1px 4px rgba(198, 40, 40, 0.15);
+    ">
+        🎉 Feiertag<br><span style='font-size:20px;'>{feiertag_heute if feiertag_heute else "Kein Feiertag heute 😟"}</span>
+    </div>
+""", unsafe_allow_html=True)
+
+col3.markdown("""
+    <div style="
+        background:#fff3e0; 
+        border:1.5px solid #f57c00; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#f57c00;
+        box-shadow: 1px 1px 4px rgba(245, 124, 0, 0.15);
+    ">
+        ⚠️ Sicherheits-Check<br>
+        <span style='font-size:18px; font-weight:normal;'>
+            Vor Fahrtbeginn: Fahrzeug-Check durchführen!
+        </span>
+    </div>
+""", unsafe_allow_html=True)
+
+col4.markdown("""
+    <div style="
+        background:#ede7f6; 
+        border:1.5px solid #5e35b1; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#5e35b1;
+        box-shadow: 1px 1px 4px rgba(94, 53, 177, 0.15);
+    ">
+        📌 Tipp<br><span style='font-size:18px;'>Regelmäßig Aufgaben prüfen!</span>
+    </div>
+""", unsafe_allow_html=True)
