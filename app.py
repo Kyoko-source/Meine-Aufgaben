@@ -308,21 +308,29 @@ def quiz_starten():
                 st.session_state.name = ""
 
 with col4:
+    # Stil für den Button via st.markdown mit CSS, damit Button groß und schön aussieht
     st.markdown("""
-        <div style="
-            background:#e3f2fd; 
-            border:1.5px solid #1565c0; 
-            border-radius:8px; 
-            padding:12px; 
-            text-align:center;
-            font-weight:bold;
-            color:#1565c0;
+        <style>
+        div.stButton > button:first-child {
+            width: 100%;
+            height: 120px;
+            background-color: #e3f2fd;
+            border: 1.5px solid #1565c0;
+            border-radius: 8px;
+            color: #1565c0;
+            font-weight: bold;
+            font-size: 18px;
             box-shadow: 1px 1px 4px rgba(21, 101, 192, 0.15);
-        ">
-            ❓ Quizzeit<br>
-            Klicke auf den Button, um dein Wissen zu testen!
-        </div>
+            cursor: pointer;
+        }
+        div.stButton > button:first-child:hover {
+            background-color: #bbdefb;
+        }
+        </style>
     """, unsafe_allow_html=True)
 
-    quiz_starten()
-           
+    if st.button("❓ Quizzeit\nKlicke hier, um dein Wissen zu testen!"):
+        st.session_state.quiz_aktiv = True
+
+    if st.session_state.get("quiz_aktiv", False):
+        quiz_starten()
