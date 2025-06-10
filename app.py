@@ -5,7 +5,7 @@ import json
 import os
 import hashlib
 
-# 🔒 Verbesserte Passwortabfrage – zentriert & gestylt
+# 🔒 Passwortschutz
 def check_password():
     def password_entered():
         if st.session_state["password"] == "RettSüd15":
@@ -22,12 +22,7 @@ def check_password():
             st.text_input("Passwort", type="password", on_change=password_entered, key="password")
         st.stop()
 
-# Passwortprüfung zuerst ausführen
 check_password()
-
-# ===========================
-# ✅ RTW/KTW Aufgaben-App
-# ===========================
 
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 
@@ -119,20 +114,17 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=Fal
         else:
             st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
 
-# Aktuelles Datum und Wochentag
+# Datum & Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
 heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
 heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
 feiertag_heute = feiertage_2025.get(heute_str)
 
-# Lade gespeicherten Status
 status_dict = lade_status()
 
-# Seitentitel & Header
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
-# Aufgabenbereiche in Boxen mit Farben & Überschrift und Liste
 col_ktw, col_rtw = st.columns(2)
 
 with col_ktw:
@@ -165,7 +157,6 @@ with col_rtw:
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="RTW", readonly=False)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Dropdown für andere Tage
 st.markdown("---")
 tag_auswahl = st.selectbox("📌 Wähle einen anderen Wochentag zur Ansicht:", ["—"] + list(tage_uebersetzung.values()))
 
@@ -203,7 +194,7 @@ if tag_auswahl != "—":
             aufgabe_mit_feedback(aufgabe, tag_auswahl, status_dict, fahrzeug="RTW", readonly=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-# Tagesinfos schön gestaltet mit 4 farbigen Boxen
+# Tagesinfos mit 4 farbigen Boxen
 st.markdown("---")
 st.markdown("### 🌤️ Zusätzliche Tagesinfos")
 
@@ -271,9 +262,18 @@ with col4:
     </div>
     """, unsafe_allow_html=True)
 
-    # Quiz-Fragen + Logik
     quiz_fragen = [
         {"frage": "Wie viele Tage hat eine Woche?", "optionen": ["5", "6", "7", "8"], "antwort": "7"},
         {"frage": "Wie viele Stunden hat ein Tag?", "optionen": ["20", "24", "30", "12"], "antwort": "24"},
         {"frage": "Welches Fahrzeug ist für den Rettungsdienst typisch?", "optionen": ["RTW", "KTW", "PKW", "LKW"], "antwort": "RTW"},
-        {"frage": "Was sollte vor Fahrtbeginn geprüft werden?", "option
+        {"frage": "Was sollte vor Fahrtbeginn geprüft werden?", "optionen": ["Bremsen", "Motoröl", "Reifenluftdruck", "Alle genannten"], "antwort": "Alle genannten"},
+    ]
+
+    for i, frage in enumerate(quiz_fragen):
+        st.markdown(f"**{frage['frage']}**")
+        antwort = st.radio("", frage["optionen"], key=f"quiz_{i}")
+        if antwort == frage["antwort"]:
+            st.success("Richtig!")
+        elif antwort != "":
+            st.error("Falsch!")
+
