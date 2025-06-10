@@ -261,57 +261,53 @@ quiz_fragen = [
     {"frage": "Welcher Tag ist heute?", "optionen": list(tage_uebersetzung.values()), "antwort": heute_deutsch},
     {"frage": "Was sollte vor Fahrtbeginn geprüft werden?", "optionen": ["Fahrzeug", "Fahrer", "Wetter"], "antwort": "Fahrzeug"},
     {"frage": "Wie viele Aufgaben gibt es für Freitag beim RTW?", "optionen": ["2", "3", "4"], "antwort": "3"},
-    # Füge weitere Fragen hier hinzu ...
 ]
 
 def quiz_starten():
     if "quiz_index" not in st.session_state:
         st.session_state.quiz_index = 0
         st.session_state.score = 0
-        st.session_state.quiz_aktiv = True
+        st.session_state.quiz_aktiv = False
         st.session_state.name = ""
 
-    # Quiz-Intro: Name abfragen, wenn noch nicht eingegeben
-    if st.session_state.name == "":
-        st.text_input("Bitte gib deinen Namen ein:", key="name")
-        if st.session_state.name:
-            st.session_state.quiz_index = 0
-            st.session_state.score = 0
-            st.session_state.quiz_aktiv = True
-        return
-
-    frage_aktuell = quiz_fragen[st.session_state.quiz_index]
-    st.markdown(f"**Frage {st.session_state.quiz_index +1} von {len(quiz_fragen)}:** {frage_aktuell['frage']}")
-
-    option = st.radio("Antwort auswählen:", frage_aktuell["optionen"], key=f"frage_{st.session_state.quiz_index}")
-
-    if st.button("Antwort bestätigen"):
-        if option == frage_aktuell["antwort"]:
-            st.success("Richtig!")
-            st.session_state.score += 1
-            st.session_state.quiz_index += 1
-            if st.session_state.quiz_index == len(quiz_fragen):
-                st.session_state.quiz_aktiv = False
-        else:
-            st.error("Falsch! Quiz beendet.")
-            st.session_state.quiz_aktiv = False
-
     if not st.session_state.quiz_aktiv:
-        st.markdown(f"### {st.session_state.name}, du hast {st.session_state.score} von {len(quiz_fragen)} Fragen richtig beantwortet.")
-        if st.button("Quiz neu starten"):
+        if st.button("Quizzeit"):
+            st.session_state.quiz_aktiv = True
             st.session_state.quiz_index = 0
             st.session_state.score = 0
-            st.session_state.quiz_aktiv = True
             st.session_state.name = ""
+
+    if st.session_state.quiz_aktiv:
+        if st.session_state.name == "":
+            name = st.text_input("Bitte gib deinen Namen ein:", key="name")
+            if name:
+                st.session_state.name = name
+            return
+
+        frage_aktuell = quiz_fragen[st.session_state.quiz_index]
+        st.markdown(f"**Frage {st.session_state.quiz_index + 1} von {len(quiz_fragen)}:** {frage_aktuell['frage']}")
+        option = st.radio("Antwort auswählen:", frage_aktuell["optionen"], key=f"frage_{st.session_state.quiz_index}")
+
+        if st.button("Antwort bestätigen", key=f"btn_{st.session_state.quiz_index}"):
+            if option == frage_aktuell["antwort"]:
+                st.success("Richtig!")
+                st.session_state.score += 1
+            else:
+                st.error(f"Falsch! Die richtige Antwort ist: {frage_aktuell['antwort']}")
+            st.session_state.quiz_index += 1
+
+            if st.session_state.quiz_index >= len(quiz_fragen):
+                st.session_state.quiz_aktiv = False
+
+        if not st.session_state.quiz_aktiv and st.session_state.quiz_index >= len(quiz_fragen):
+            st.markdown(f"### {st.session_state.name}, du hast {st.session_state.score} von {len(quiz_fragen)} Fragen richtig beantwortet.")
+            if st.button("Quiz neu starten"):
+                st.session_state.quiz_index = 0
+                st.session_state.score = 0
+                st.session_state.quiz_aktiv = False
+                st.session_state.name = ""
 
 with col4:
     st.markdown("""
         <div style="
-            background:#ede7f6; 
-            border:1.5px solid #5e35b1; 
-            border-radius:8px; 
-            padding:12px; 
-            text-align:center;
-            font-weight:bold;
-            color:#5e35b1;
-            box-shadow: 1px 1px 4px rgba(94, 
+           
