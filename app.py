@@ -35,7 +35,7 @@ STATUS_DATEI = "status.json"
 
 aufgaben_ktw = {
     "Montag": ["Fächerdesi 1-6", "Umkleide Bad SW-Bereich reinigen"],
-    "Dienstag": ["BZ Kontrolle", "Fächerdesi 7-8", "BZ Messung"],
+    "Dienstag": ["BZ Kontrolle", "Fächerdesi 7-8"],
     "Mittwoch": ["Innenraumdesi KTW"],
     "Donnerstag": ["Auto waschen (KTW)", "Garage reinigen"],
     "Freitag": ["Betriebsmittelkontrolle", "O2 Schlauch + Fingertipp wechseln"],
@@ -47,7 +47,7 @@ aufgaben_rtw = {
     "Montag": ["Fächerdesi 1-6", "Umkleide Bad SW-Bereich reinigen"],
     "Dienstag": ["BZ Kontrolle", "Fächerdesi 7-11"],
     "Mittwoch": ["Innenraumdesi RTW"],
-    "Donnerstag": ["Auto waschen (RTW)", "Garage reinigen", "Betriebsmittelkontrolle"],
+    "Donnerstag": ["Auto waschen (RTW)", "Garage reinigen"],
     "Freitag": ["Fach 12-18 desinfizieren", "O2 Schlauch + Fingertipp wechseln", "Betriebsmittel Kontrolle"],
     "Samstag": ["Fach 20-22 desinfizieren"],
     "Sonntag": ["Küche reinigen alle Fronten"]
