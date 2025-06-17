@@ -102,22 +102,26 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=Fal
     checked = status_dict.get(key_hash, False)
 
     if readonly:
+        # Nur Text anzeigen, keine interaktive Checkbox
         if checked:
             st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
         else:
             st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
     else:
-        neu_gesetzt = st.checkbox("", value=checked, key=key_hash)
+        col_cb, col_text = st.columns([1, 20])
+        with col_cb:
+            neu_gesetzt = st.checkbox("", value=checked, key=key_hash)
+        with col_text:
+            if neu_gesetzt:
+                st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
+
         if neu_gesetzt != checked:
             status_dict[key_hash] = neu_gesetzt
             speichere_status(status_dict)
             if neu_gesetzt:
                 st.balloons()
-
-        if neu_gesetzt:
-            st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
 
 # Aktuelles Datum und Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
