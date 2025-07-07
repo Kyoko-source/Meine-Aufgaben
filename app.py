@@ -160,6 +160,38 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=Fal
             if neu_gesetzt:
                 st.balloons()
 
+# Funktion zur Anzeige der Monatsaufgaben
+def zeige_monatsaufgaben(tag, status_dict, readonly=False):
+    aufgaben = aufgaben_monat.get(tag, [])
+    if aufgaben:
+        st.markdown(f"<h3 style='color:#1976d2;'>📅 Monatsaufgaben für den {tag}.</h3>", unsafe_allow_html=True)
+        for aufgabe in aufgaben:
+            jahr = datetime.datetime.now().year
+            raw_key = f"Monat_{tag}_{jahr}_{aufgabe}"
+            key_hash = hashlib.md5(raw_key.encode()).hexdigest()
+            checked = status_dict.get(key_hash, False)
+
+            if readonly:
+                if checked:
+                    st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
+                else:
+                    st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
+            else:
+                col_cb, col_text = st.columns([1, 20])
+                with col_cb:
+                    neu_gesetzt = st.checkbox("", value=checked, key=key_hash)
+                with col_text:
+                    if neu_gesetzt:
+                        st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
+
+                if neu_gesetzt != checked:
+                    status_dict[key_hash] = neu_gesetzt
+                    speichere_status(status_dict)
+                    if neu_gesetzt:
+                        st.balloons()
+
 # Aktuelles Datum und Wochentag
 heute_en = datetime.datetime.now().strftime('%A')
 heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
@@ -213,54 +245,24 @@ with col_rtw:
 if feiertag_heute:
     st.markdown(f"### 🎉 Heute ist Feiertag: **{feiertag_heute}** 🎉")
 
-# Anzeige der Monatsaufgaben für den heutigen Tag (einmal, da gleich für KTW und RTW)
+# Anzeige der Monatsaufgaben für den heutigen Tag (einmalig für KTW + RTW)
 st.markdown("---")
 st.markdown("## 📅 Monatsaufgaben")
+zeige_monatsaufgaben(heute_tag, status_dict)
 
-aufgaben_heute = aufgaben_monat.get(heute_tag, [])
-if aufgaben_heute and not (len(aufgaben_heute) == 1 and aufgaben_heute[0].lower() == "keine monatsaufgabe"):
-    st.markdown(f"""
-    <div style="
-        background-color:#fff3e0; 
-        border:2px solid #fb8c00; 
-        border-radius:12px; 
-        padding:20px; 
-        box-shadow: 2px 3px 10px rgba(251, 140, 0, 0.3);
-        margin-bottom: 20px;
-    ">
-        <h4 style='color:#ef6c00;'>📌 Monatsaufgaben für den {heute_tag}.</h4>
-    """, unsafe_allow_html=True)
+# --- Zusatzinfos am Ende ---
 
-    # Status für die Monatsaufgaben anzeigen (alle in einer Liste mit Checkboxen)
-    for aufgabe in aufgaben_heute:
-        jahr = datetime.datetime.now().year
-        raw_key = f"Monat_{heute_tag}_{jahr}_{aufgabe}"
-        key_hash = hashlib.md5(raw_key.encode()).hexdigest()
-        checked = status_dict.get(key_hash, False)
-
-        col_cb, col_text = st.columns([1, 20])
-        with col_cb:
-            neu_gesetzt = st.checkbox("", value=checked, key=key_hash)
-        with col_text:
-            if neu_gesetzt:
-                st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
-            else:
-                st.markdown(f"<span style='color:#bf360c;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
-
-        if neu_gesetzt != checked:
-            status_dict[key_hash] = neu_gesetzt
-            speichere_status(status_dict)
-            if neu_gesetzt:
-                st.balloons()
-
-    st.markdown("</div>", unsafe_allow_html=True)
-else:
-    st.info("Heute keine Monatsaufgaben geplant.")
-
-# Footer mit Uhrzeit
 st.markdown("---")
-st.markdown(f"⏰ Aktuelle Uhrzeit: {get_current_time()}")
 
-# Hinweis:
-# Möchtest du Monatsaufgaben befüllen, trage einfach z.B.:
-# aufgaben_monat[1] = ["Monatscheck Batteriezustand", "Lüftungsfilter prüfen"]
+# Aktuelle Uhrzeit prominent anzeigen
+uhrzeit = get_current_time()
+st.markdown(f"<div style='text-align:center; font-size:18px; color:#555;'>⏰ Aktuelle Uhrzeit: <b>{uhrzeit}</b></div>", unsafe_allow_html=True)
+
+# Freundlicher Abschluss-Text oder Disclaimer
+st.markdown("""
+<div style='text-align:center; margin-top:10px; font-size:12px; color:#999;'>
+    Diese Anwendung dient zur Unterstützung bei den täglichen Aufgaben.<br>
+    Bitte regelmäßig updaten und kontrollieren.<br>
+    © 2025 Rettungswache Südlohn
+</div>
+""", unsafe_allow_html=True)
