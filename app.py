@@ -111,7 +111,7 @@ aufgaben_monat = {
     24: ["Martinanlage prüfen und ölen"],
     25: ["Keine Monatsaufgabe"],
     26: ["Keine Monatsaufgabe"],
-    27: ["Monatliche Kontrolle C3 C1],
+    27: ["Monatliche Kontrolle C3 C1"],
     28: ["Reinigung Aussenstahlschrank"],
     29: ["Reinigung Wachenvorplatz"],
     30: ["Keine Monatsaufgabe"],
