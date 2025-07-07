@@ -152,10 +152,12 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=Fal
                 st.balloons()
 
 def zeige_monatsaufgaben(tag, status_dict, readonly=False):
-    aufgaben = aufgaben_monat.get(tag, [])
-    if aufgaben:
-        # Box mit Hintergrundfarbe + Rahmen + Schatten
-        st.markdown("""
+    # Filtere "Keine Monatsaufgabe" raus, falls vorhanden
+    aufgaben = [a for a in aufgaben_monat.get(tag, []) if a.lower() != "keine monatsaufgabe"]
+    if not aufgaben:
+        return
+    # Überschrift zentriert in orangener Box
+    st.markdown("""
         <div style="
             background-color:#fff3e0;
             border: 2px solid #fb8c00;
@@ -163,37 +165,55 @@ def zeige_monatsaufgaben(tag, status_dict, readonly=False):
             padding: 20px;
             box-shadow: 2px 3px 8px rgba(251, 140, 0, 0.15);
             margin-top: 15px;
-            margin-bottom: 25px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 24px;
+            color: #fb8c00;
         ">
-        """, unsafe_allow_html=True)
-        st.markdown(f"<h3 style='color:#fb8c00; margin-bottom:15px;'>📅 Monatsaufgaben für den {tag}.</h3>", unsafe_allow_html=True)
-        for aufgabe in aufgaben:
-            jahr = datetime.datetime.now().year
-            raw_key = f"Monat_{tag}_{jahr}_{aufgabe}"
-            key_hash = hashlib.md5(raw_key.encode()).hexdigest()
-            checked = status_dict.get(key_hash, False)
+            Monatsaufgaben
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Aufgaben-Container ohne Rahmen, mit orangener Schrift, Abstand zur Überschrift
+    st.markdown("""
+        <div style="
+            background-color:#fff3e0;
+            border: none;
+            padding: 0 20px 20px 20px;
+            margin-top: 0px;
+            margin-bottom: 25px;
+            color: #fb8c00;
+        ">
+    """, unsafe_allow_html=True)
+    
+    for aufgabe in aufgaben:
+        jahr = datetime.datetime.now().year
+        raw_key = f"Monat_{tag}_{jahr}_{aufgabe}"
+        key_hash = hashlib.md5(raw_key.encode()).hexdigest()
+        checked = status_dict.get(key_hash, False)
 
-            if readonly:
-                if checked:
+        if readonly:
+            if checked:
+                st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
+        else:
+            col_cb, col_text = st.columns([1, 20])
+            with col_cb:
+                neu_gesetzt = st.checkbox("", value=checked, key=key_hash)
+            with col_text:
+                if neu_gesetzt:
                     st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
                 else:
                     st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
-            else:
-                col_cb, col_text = st.columns([1, 20])
-                with col_cb:
-                    neu_gesetzt = st.checkbox("", value=checked, key=key_hash)
-                with col_text:
-                    if neu_gesetzt:
-                        st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"<span style='color:red;'>⏳ {aufgabe}</span>", unsafe_allow_html=True)
 
-                if neu_gesetzt != checked:
-                    status_dict[key_hash] = neu_gesetzt
-                    speichere_status(status_dict)
-                    if neu_gesetzt:
-                        st.balloons()
-        st.markdown("</div>", unsafe_allow_html=True)
+            if neu_gesetzt != checked:
+                status_dict[key_hash] = neu_gesetzt
+                speichere_status(status_dict)
+                if neu_gesetzt:
+                    st.balloons()
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # Datum & Feiertag
 heute_en = datetime.datetime.now().strftime('%A')
@@ -256,63 +276,55 @@ col1, col2, col3, col4 = st.columns(4)
 
 col1.markdown(f"""
     <div style="
-        background:#e8f5e9; 
-        border:1.5px solid #2e7d32; 
-        border-radius:8px; 
-        padding:12px; 
+        background:#e0f7fa; 
+        border-radius:12px; 
+        padding:20px;
         text-align:center;
-        font-weight:bold;
-        color:#2e7d32;
-        box-shadow: 1px 1px 4px rgba(46, 125, 50, 0.15);
+        box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
     ">
-        🕒 Uhrzeit<br><span style='font-size:24px;'>{get_current_time()}</span>
+        <h4>🕒 Uhrzeit</h4>
+        <p style='font-size:24px; margin:0;'>{get_current_time()}</p>
     </div>
 """, unsafe_allow_html=True)
 
 col2.markdown(f"""
     <div style="
-        background:#ffebee; 
-        border:1.5px solid #c62828; 
-        border-radius:8px; 
-        padding:12px; 
+        background:#f3e5f5; 
+        border-radius:12px; 
+        padding:20px;
         text-align:center;
-        font-weight:bold;
-        color:#c62828;
-        box-shadow: 1px 1px 4px rgba(198, 40, 40, 0.15);
+        box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
     ">
-        🎉 Feiertag<br><span style='font-size:20px;'>{feiertag_heute if feiertag_heute else "Kein Feiertag heute 😟"}</span>
+        <h4>📅 Datum</h4>
+        <p style='font-size:24px; margin:0;'>{heute_str}</p>
     </div>
 """, unsafe_allow_html=True)
 
-col3.markdown("""
+col3.markdown(f"""
     <div style="
         background:#fff3e0; 
-        border:1.5px solid #f57c00; 
-        border-radius:8px; 
-        padding:12px; 
+        border-radius:12px; 
+        padding:20px;
         text-align:center;
-        font-weight:bold;
-        color:#f57c00;
-        box-shadow: 1px 1px 4px rgba(245, 124, 0, 0.15);
+        box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
     ">
-        ⚠️ Sicherheits-Check<br>
-        <span style='font-size:18px; font-weight:normal;'>
-            Vor Fahrtbeginn: Fahrzeug-Check durchführen!
-        </span>
+        <h4>📆 Wochentag</h4>
+        <p style='font-size:24px; margin:0;'>{heute_deutsch}</p>
     </div>
 """, unsafe_allow_html=True)
 
-col4.markdown("""
+feiertag_text = feiertag_heute if feiertag_heute else "Kein Feiertag"
+col4.markdown(f"""
     <div style="
-        background:#ede7f6; 
-        border:1.5px solid #5e35b1; 
-        border-radius:8px; 
-        padding:12px; 
+        background:#ffebee; 
+        border-radius:12px; 
+        padding:20px;
         text-align:center;
+        box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
+        color:#c62828;
         font-weight:bold;
-        color:#5e35b1;
-        box-shadow: 1px 1px 4px rgba(94, 53, 177, 0.15);
     ">
-        📌 Tipp<br><span style='font-size:18px;'>Regelmäßig Aufgaben prüfen!</span>
+        <h4>🎉 Feiertag</h4>
+        <p style='font-size:18px; margin:0;'>{feiertag_text}</p>
     </div>
 """, unsafe_allow_html=True)
