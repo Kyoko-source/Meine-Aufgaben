@@ -5,7 +5,7 @@ import json
 import os
 import hashlib
 
-# 🔒 Verbesserte Passwortabfrage – zentriert & gestylt
+# Passwortabfrage (zentriert & gestylt)
 def check_password():
     def password_entered():
         if st.session_state["password"] == "RettSüd15":
@@ -15,19 +15,14 @@ def check_password():
             st.error("❌ Falsches Passwort. Bitte versuche es erneut.")
 
     if "passwort_akzeptiert" not in st.session_state or not st.session_state["passwort_akzeptiert"]:
-        col1, col2, col3 = st.columns([1, 2, 1])
+        col1, col2, col3 = st.columns([1,2,1])
         with col2:
             st.markdown("## 🔐 Zugriff geschützt")
             st.markdown("Bitte Passwort eingeben, um fortzufahren.")
             st.text_input("Passwort", type="password", on_change=password_entered, key="password")
         st.stop()
 
-# Passwortprüfung zuerst ausführen
 check_password()
-
-# ===========================
-# ✅ RTW/KTW Aufgaben-App
-# ===========================
 
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 
@@ -81,9 +76,6 @@ feiertage_2025 = {
     "26.12.2025": "2. Weihnachtstag"
 }
 
-# =============================
-# Monatsaufgaben 1-31 als Platzhalter
-# =============================
 aufgaben_monat = {
     1: ["Verfallsdaten Verbrauchsmaterialien Fzg"],
     2: ["Reinigung Rucksäcke und tausch mit reserve"],
@@ -139,7 +131,6 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=Fal
     checked = status_dict.get(key_hash, False)
 
     if readonly:
-        # Nur Text anzeigen, keine interaktive Checkbox
         if checked:
             st.markdown(f"<span style='color:green; text-decoration: line-through;'>✅ {aufgabe}</span>", unsafe_allow_html=True)
         else:
@@ -160,11 +151,22 @@ def aufgabe_mit_feedback(aufgabe, wochentag, status_dict, fahrzeug, readonly=Fal
             if neu_gesetzt:
                 st.balloons()
 
-# Funktion zur Anzeige der Monatsaufgaben
 def zeige_monatsaufgaben(tag, status_dict, readonly=False):
     aufgaben = aufgaben_monat.get(tag, [])
     if aufgaben:
-        st.markdown(f"<h3 style='color:#1976d2;'>📅 Monatsaufgaben für den {tag}.</h3>", unsafe_allow_html=True)
+        # Box mit Hintergrundfarbe + Rahmen + Schatten
+        st.markdown("""
+        <div style="
+            background-color:#fff3e0;
+            border: 2px solid #fb8c00;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 2px 3px 8px rgba(251, 140, 0, 0.15);
+            margin-top: 15px;
+            margin-bottom: 25px;
+        ">
+        """, unsafe_allow_html=True)
+        st.markdown(f"<h3 style='color:#fb8c00; margin-bottom:15px;'>📅 Monatsaufgaben für den {tag}.</h3>", unsafe_allow_html=True)
         for aufgabe in aufgaben:
             jahr = datetime.datetime.now().year
             raw_key = f"Monat_{tag}_{jahr}_{aufgabe}"
@@ -191,24 +193,21 @@ def zeige_monatsaufgaben(tag, status_dict, readonly=False):
                     speichere_status(status_dict)
                     if neu_gesetzt:
                         st.balloons()
+        st.markdown("</div>", unsafe_allow_html=True)
 
-# Aktuelles Datum und Wochentag
+# Datum & Feiertag
 heute_en = datetime.datetime.now().strftime('%A')
 heute_deutsch = tage_uebersetzung.get(heute_en, "Unbekannt")
 heute_str = datetime.datetime.now().strftime('%d.%m.%Y')
 feiertag_heute = feiertage_2025.get(heute_str)
-
-# Aktueller Tag im Monat
 heute_tag = datetime.datetime.now().day
 
-# Lade gespeicherten Status
 status_dict = lade_status()
 
-# Seitentitel & Header
+# Header
 st.title("✔ Rettungswache Südlohn Tagesaufgaben ✔")
 st.subheader(f"📅 Heute ist {heute_deutsch} ({heute_str})")
 
-# Aufgabenbereiche in Boxen mit Farben & Überschrift und Liste
 col_ktw, col_rtw = st.columns(2)
 
 with col_ktw:
@@ -241,26 +240,22 @@ with col_rtw:
         aufgabe_mit_feedback(aufgabe, heute_deutsch, status_dict, fahrzeug="RTW")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Feiertagsanzeige
 if feiertag_heute:
     st.markdown(f"### 🎉 Heute ist Feiertag: **{feiertag_heute}** 🎉")
 
-# Anzeige der Monatsaufgaben für den heutigen Tag (einmalig für KTW + RTW)
 st.markdown("---")
-st.markdown("## 📅 Monatsaufgaben")
+
+# Monatsaufgaben anzeigen (Box mit Stil, siehe Funktion)
 zeige_monatsaufgaben(heute_tag, status_dict)
 
-# --- Zusatzinfos am Ende ---
-
+# --- Zusatzinfos am Ende zentriert & klein ---
 st.markdown("---")
-
-# Aktuelle Uhrzeit prominent anzeigen
 uhrzeit = get_current_time()
-st.markdown(f"<div style='text-align:center; font-size:18px; color:#555;'>⏰ Aktuelle Uhrzeit: <b>{uhrzeit}</b></div>", unsafe_allow_html=True)
-
-# Freundlicher Abschluss-Text oder Disclaimer
-st.markdown("""
-<div style='text-align:center; margin-top:10px; font-size:12px; color:#999;'>
+st.markdown(f"""
+<div style="text-align:center; font-size:16px; color:#555; margin-bottom:5px;">
+    ⏰ Aktuelle Uhrzeit: <b>{uhrzeit}</b>
+</div>
+<div style="text-align:center; font-size:12px; color:#999; line-height:1.4;">
     Diese Anwendung dient zur Unterstützung bei den täglichen Aufgaben.<br>
     Bitte regelmäßig updaten und kontrollieren.<br>
     © 2025 Rettungswache Südlohn
