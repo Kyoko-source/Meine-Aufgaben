@@ -248,16 +248,71 @@ st.markdown("---")
 # Monatsaufgaben anzeigen (Box mit Stil, siehe Funktion)
 zeige_monatsaufgaben(heute_tag, status_dict)
 
-# --- Zusatzinfos am Ende zentriert & klein ---
+# Tagesinfos schön gestaltet mit 4 farbigen Boxen
 st.markdown("---")
-uhrzeit = get_current_time()
-st.markdown(f"""
-<div style="text-align:center; font-size:16px; color:#555; margin-bottom:5px;">
-    ⏰ Aktuelle Uhrzeit: <b>{uhrzeit}</b>
-</div>
-<div style="text-align:center; font-size:12px; color:#999; line-height:1.4;">
-    Diese Anwendung dient zur Unterstützung bei den täglichen Aufgaben.<br>
-    Bitte regelmäßig updaten und kontrollieren.<br>
-    © 2025 Rettungswache Südlohn
-</div>
+st.markdown("### 🌤️ Zusätzliche Tagesinfos")
+
+col1, col2, col3, col4 = st.columns(4)
+
+col1.markdown(f"""
+    <div style="
+        background:#e8f5e9; 
+        border:1.5px solid #2e7d32; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#2e7d32;
+        box-shadow: 1px 1px 4px rgba(46, 125, 50, 0.15);
+    ">
+        🕒 Uhrzeit<br><span style='font-size:24px;'>{get_current_time()}</span>
+    </div>
+""", unsafe_allow_html=True)
+
+col2.markdown(f"""
+    <div style="
+        background:#ffebee; 
+        border:1.5px solid #c62828; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#c62828;
+        box-shadow: 1px 1px 4px rgba(198, 40, 40, 0.15);
+    ">
+        🎉 Feiertag<br><span style='font-size:20px;'>{feiertag_heute if feiertag_heute else "Kein Feiertag heute 😟"}</span>
+    </div>
+""", unsafe_allow_html=True)
+
+col3.markdown("""
+    <div style="
+        background:#fff3e0; 
+        border:1.5px solid #f57c00; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#f57c00;
+        box-shadow: 1px 1px 4px rgba(245, 124, 0, 0.15);
+    ">
+        ⚠️ Sicherheits-Check<br>
+        <span style='font-size:18px; font-weight:normal;'>
+            Vor Fahrtbeginn: Fahrzeug-Check durchführen!
+        </span>
+    </div>
+""", unsafe_allow_html=True)
+
+col4.markdown("""
+    <div style="
+        background:#ede7f6; 
+        border:1.5px solid #5e35b1; 
+        border-radius:8px; 
+        padding:12px; 
+        text-align:center;
+        font-weight:bold;
+        color:#5e35b1;
+        box-shadow: 1px 1px 4px rgba(94, 53, 177, 0.15);
+    ">
+        📌 Tipp<br><span style='font-size:18px;'>Regelmäßig Aufgaben prüfen!</span>
+    </div>
 """, unsafe_allow_html=True)
