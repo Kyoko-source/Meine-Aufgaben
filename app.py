@@ -97,25 +97,25 @@ def berechnung(alter, gewicht, erkrankung):
             dosis = 0.5
         return [("Adrenalin", f"{dosis:.2f} mg i.m.", "Altersbasierte Dosierung (<6 J:0,15 mg | 6–12 J:0,3 mg | ≥12 J:0,5 mg)")]
 
-   # --- Asthma/COPD ---
-if erkrankung == "Asthma/COPD":
-    if alter >= 12:
-        meds = [
-            ("Salbutamol", "2,5 mg vernebelt", "Erwachsene Dosis"),
-            ("Prednisolon", "100 mg i.v.", "Erwachsene Dosis"),
-            ("Ipratropiumbromid", "500 µg vernebelt", "Erwachsene Dosis")
-        ]
-    elif 4 <= alter < 12:
-        meds = [
-            ("Salbutamol", "1,25 mg vernebelt", "Kinderdosis"),
-            ("Prednisolon", "100 mg rektal", "Kinderdosis")
-        ]
-    else:  # unter 4 Jahre
-        meds = [
-            ("Adrenalin", "2 mg + 2 ml NaCl vernebelt", "Säuglingsdosis"),
-            ("Prednisolon", "100 mg rektal", "Säuglingsdosis")
-        ]
-    return meds
+    # --- Asthma/COPD ---
+    if erkrankung == "Asthma/COPD":
+        if alter >= 12:
+            meds = [
+                ("Salbutamol", "2,5 mg vernebelt", "Erwachsene Dosis"),
+                ("Prednisolon", "100 mg i.v.", "Erwachsene Dosis"),
+                ("Ipratropiumbromid", "500 µg vernebelt", "Erwachsene Dosis")
+            ]
+        elif 4 <= alter < 12:
+            meds = [
+                ("Salbutamol", "1,25 mg vernebelt", "Kinderdosis"),
+                ("Prednisolon", "100 mg rektal", "Kinderdosis")
+            ]
+        else:  # unter 4 Jahre
+            meds = [
+                ("Adrenalin", "2 mg + 2 ml NaCl vernebelt", "Säuglingsdosis"),
+                ("Prednisolon", "100 mg rektal", "Säuglingsdosis")
+            ]
+        return meds
 
     return []
 
@@ -144,4 +144,3 @@ if st.button("💉 Dosierung berechnen"):
 # ---------- Footer ----------
 st.markdown("---")
 st.caption("Schulungsanwendung | Keine medizinische Verantwortung")
-
