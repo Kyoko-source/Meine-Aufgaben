@@ -80,12 +80,21 @@ with col2:
         "Erkrankung auswählen",
         [
             "Anaphylaxie",
-            "Asthma/COPD"
+            "Asthma/COPD",
+            "Hypoglykämie"
         ]
     )
 
+# Für Hypoglykämie Bewusstseinsabfrage
+bewusstseinslage = None
+if erkrankung == "Hypoglykämie":
+    bewusstseinslage = st.radio(
+        "Patientenbewusstsein",
+        ["Ansprechbar (orale Gabe möglich)", "Bewusstseinsgestört (nur i.v.)"]
+    )
+
 # ---------- Berechnungslogik ----------
-def berechnung(alter, gewicht, erkrankung):
+def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None):
 
     # --- Anaphylaxie ---
     if erkrankung == "Anaphylaxie":
@@ -117,11 +126,20 @@ def berechnung(alter, gewicht, erkrankung):
             ]
         return meds
 
+    # --- Hypoglykämie ---
+    if erkrankung == "Hypoglykämie":
+        if bewusstseinslage is None:
+            return [("Glucose", "bis 16 g i.v. langsam", "Langsame Applikation")]
+        if bewusstseinslage.startswith("Ansprechbar"):
+            return [("Glucose", "bis 16 g p.o. oder i.v.", "Patient ansprechbar → orale Gabe möglich, sonst langsam i.v.")]
+        else:
+            return [("Glucose", "bis 16 g i.v.", "Bewusstseinsgestört → nur i.v., langsam applizieren")]
+
     return []
 
 # ---------- Button ----------
 if st.button("💉 Dosierung berechnen"):
-    ergebnisse = berechnung(alter, gewicht, erkrankung)
+    ergebnisse = berechnung(alter, gewicht, erkrankung, bewusstseinslage)
 
     st.markdown("<div class='box'>", unsafe_allow_html=True)
     st.markdown("## 📋 Ergebnis")
@@ -134,6 +152,8 @@ if st.button("💉 Dosierung berechnen"):
             st.write(f"**Hinweis:** {hinweis}")
             if erkrankung == "Anaphylaxie":
                 st.info("ℹ️ Dosierung erfolgt altersbasiert, nicht nach Gewicht.")
+            elif erkrankung == "Hypoglykämie":
+                st.info("ℹ️ Beachte Bewusstseinslage: oral möglich nur wenn ansprechbar.")
             else:
                 st.write("⚠️ Gewicht für Berechnung beachten, falls relevant.")
             st.markdown("</div>", unsafe_allow_html=True)
