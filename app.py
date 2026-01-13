@@ -1,3 +1,4 @@
+
 import streamlit as st
 
 # ---------- Seiteneinstellungen ----------
@@ -83,7 +84,8 @@ with col2:
             "Asthma/COPD",
             "Hypoglykämie",
             "Krampfanfall",
-            "Schlaganfall"
+            "Schlaganfall",
+            "Kardiales Lungenödem"
         ]
     )
 
@@ -104,7 +106,7 @@ if erkrankung == "Krampfanfall":
         ["Ja, Zugang vorhanden", "Nein, kein Zugang"]
     )
 
-if erkrankung == "Schlaganfall":
+if erkrankung in ["Schlaganfall", "Kardiales Lungenödem"]:
     blutdruck = st.number_input(
         "Systolischer Blutdruck (mmHg)",
         min_value=50,
@@ -180,6 +182,20 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, b
         else:
             return [("Keine akute medikamentöse Therapie", "–", "Blutdruck im Normbereich")]
 
+    # --- Kardiales Lungenödem ---
+    if erkrankung == "Kardiales Lungenödem":
+        if blutdruck is None:
+            return []
+        if blutdruck > 120:
+            return [
+                ("Nitro", "0,4–0,8 mg sublingual", "Blutdruck >120 mmHg → Nitro unter die Zunge"),
+                ("Furosemid", "20 mg i.v.", "Immer langsam i.v. applizieren")
+            ]
+        else:
+            return [
+                ("Furosemid", "20 mg i.v.", "Blutdruck ≤120 mmHg → nur Furosemid i.v., langsam applizieren")
+            ]
+
     return []
 
 # ---------- Button ----------
@@ -203,6 +219,8 @@ if st.button("💉 Dosierung berechnen"):
                 st.info("ℹ️ Dosierung nach Gewicht und Zugangsverfügbarkeit.")
             elif erkrankung == "Schlaganfall":
                 st.info("ℹ️ Blutdruckabhängige Therapie beachten.")
+            elif erkrankung == "Kardiales Lungenödem":
+                st.info("ℹ️ Blutdruckabhängige Therapie beachten: Nitro + Furosemid oder nur Furosemid.")
             else:
                 st.write("⚠️ Gewicht für Berechnung beachten, falls relevant.")
             st.markdown("</div>", unsafe_allow_html=True)
@@ -213,4 +231,3 @@ if st.button("💉 Dosierung berechnen"):
 # ---------- Footer ----------
 st.markdown("---")
 st.caption("Schulungsanwendung | Keine medizinische Verantwortung")
-
