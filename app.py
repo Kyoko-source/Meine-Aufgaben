@@ -163,4 +163,54 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, b
             return [("Midazolam", f"{dosis_mg:.2f} mg i.v. langsam", "0,05 mg/kg KG, langsam i.v. bei Zugang möglich")]
         else:
             if gewicht <= 10:
-                return [("Midazolam", "2,5 mg = 0,5 ml", "Zugang nicht mögl]()
+                return [("Midazolam", "2,5 mg = 0,5 ml", "Zugang nicht möglich, 0-10 kg")]
+            elif gewicht <= 20:
+                return [("Midazolam", "5 mg = 1 ml", "Zugang nicht möglich, 10-20 kg")]
+            else:
+                return [("Midazolam", "10 mg = 2 ml", "Zugang nicht möglich, >20 kg")]
+
+    # --- Schlaganfall ---
+    if erkrankung == "Schlaganfall":
+        if blutdruck is None:
+            return []
+        if blutdruck < 120:
+            return [("Jonosteril", "Volumengabe nach Bedarf", "Blutdruck <120 mmHg → Volumengabe")]
+        elif blutdruck > 220:
+            return [("Urapidil", "5–15 mg i.v. langsam", "Blutdruck >220 mmHg → Urapidil langsam i.v.")]
+        else:
+            return [("Keine akute medikamentöse Therapie", "–", "Blutdruck im Normbereich")]
+
+    return []
+
+# ---------- Button ----------
+if st.button("💉 Dosierung berechnen"):
+    ergebnisse = berechnung(alter, gewicht, erkrankung, bewusstseinslage, zugang, blutdruck)
+
+    st.markdown("<div class='box'>", unsafe_allow_html=True)
+    st.markdown("## 📋 Ergebnis")
+
+    for med, dosis, hinweis in ergebnisse:
+        st.write(f"**Medikament:** {med}")
+        st.write(f"**Dosierung:** {dosis}")
+        if schulungsmodus:
+            st.markdown("<div class='calc'>", unsafe_allow_html=True)
+            st.write(f"**Hinweis:** {hinweis}")
+            if erkrankung == "Anaphylaxie":
+                st.info("ℹ️ Dosierung erfolgt altersbasiert, nicht nach Gewicht.")
+            elif erkrankung == "Hypoglykämie":
+                st.info("ℹ️ Beachte Bewusstseinslage: oral möglich nur wenn ansprechbar.")
+            elif erkrankung == "Krampfanfall":
+                st.info("ℹ️ Dosierung nach Gewicht und Zugangsverfügbarkeit.")
+            elif erkrankung == "Schlaganfall":
+                st.info("ℹ️ Blutdruckabhängige Therapie beachten.")
+            else:
+                st.write("⚠️ Gewicht für Berechnung beachten, falls relevant.")
+            st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("---")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# ---------- Footer ----------
+st.markdown("---")
+st.caption("Schulungsanwendung | Keine medizinische Verantwortung")
+
