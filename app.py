@@ -239,12 +239,14 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, b
     # --- Abdominelle Schmerzen / Koliken ---
     elif erkrankung == "Abdominelle Schmerzen / Koliken":
         if schmerzskala is not None:
-            if 1 <= schmerzskala <= 3:
-                if alter >= 13 or 30 <= gewicht <= 50:
+            # Paracetamol 3-5
+            if 3 <= schmerzskala <= 5:
+                if gewicht < 50:
                     paracetamol_dosis = 15 * gewicht
                     med_list.append(("Paracetamol", f"{paracetamol_dosis:.1f} mg", "15 mg/kg KG"))
-                elif gewicht > 50:
-                    med_list.append(("Paracetamol", "1 g", "Gewicht >50 kg"))
+                else:
+                    med_list.append(("Paracetamol", "1 g", "Gewicht ≥50 kg"))
+            # Butylscopolamin + Fentanyl 6-10
             elif 6 <= schmerzskala <= 10:
                 butyl_dosis = 0.3 * gewicht
                 if butyl_dosis > 40:
