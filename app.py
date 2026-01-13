@@ -66,6 +66,7 @@ with st.container():
     st.markdown("<div class='box'>", unsafe_allow_html=True)
     col1, col2 = st.columns([1, 1])
 
+    # ---- Patientendaten ----
     with col1:
         st.markdown("<div class='input-box'>", unsafe_allow_html=True)
         st.markdown("### ⚖️ Patientendaten")
@@ -77,6 +78,7 @@ with st.container():
             gewicht = st.number_input("Gewicht (optional, kg)", min_value=20.0, max_value=200.0, step=1.0)
         st.markdown("</div>", unsafe_allow_html=True)
 
+    # ---- Erkrankungsauswahl ----
     with col2:
         st.markdown("<div class='input-box'>", unsafe_allow_html=True)
         st.markdown("### 🩺 Erkrankung auswählen")
@@ -89,7 +91,8 @@ with st.container():
             "Kardiales Lungenödem",
             "Hypertensiver Notfall",
             "Starke Schmerzen bei Trauma",
-            "Brustschmerz ACS"
+            "Brustschmerz ACS",
+            "Abdominelle Schmerzen / Koliken"
         ])
 
         bewusstseinslage = None
@@ -97,6 +100,7 @@ with st.container():
         blutdruck = None
         trauma_medikament = None
         atemfrequenz = None
+        schmerzskala = None
 
         if erkrankung == "Hypoglykämie":
             bewusstseinslage = st.radio("Patientenbewusstsein", ["Ansprechbar (orale Gabe möglich)", "Bewusstseinsgestört (nur i.v.)"])
@@ -108,12 +112,14 @@ with st.container():
             trauma_medikament = st.radio("Analgetika nach Paracetamol auswählen", ["Esketamin", "Fentanyl"])
         if erkrankung == "Brustschmerz ACS":
             atemfrequenz = st.number_input("Atemfrequenz (pro Minute)", min_value=0, max_value=60, step=1)
+        if erkrankung == "Abdominelle Schmerzen / Koliken":
+            schmerzskala = st.slider("Schmerzskala (1–10)", 1, 10, 5)
 
         st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ---------- Berechnungslogik ----------
-def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, blutdruck=None, trauma_medikament=None, atemfrequenz=None):
+def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, blutdruck=None, trauma_medikament=None, atemfrequenz=None, schmerzskala=None):
     med_list = []
 
     # --- Anaphylaxie ---
@@ -192,16 +198,13 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, b
     # --- Starke Schmerzen bei Trauma ---
     elif erkrankung == "Starke Schmerzen bei Trauma":
         if alter >= 12 or gewicht >= 30:
-            # Paracetamol
             if gewicht < 50:
                 paracetamol_dosis = 15 * gewicht
                 med_list.append(("Paracetamol", f"{paracetamol_dosis:.1f} mg", "15 mg/kg KG"))
             else:
                 med_list.append(("Paracetamol", "1 g", "Gewicht ≥50 kg"))
 
-            # Esketamin oder Fentanyl
             if trauma_medikament == "Esketamin" and gewicht > 30:
-                # Midazolam + Esketamin
                 midazolam_dosis = 0
                 if alter > 60:
                     midazolam_dosis = 1
@@ -216,7 +219,6 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, b
                 med_list.append(("Esketamin", f"{esk_dosis:.2f} mg", "0,125 mg/kg KG"))
 
             elif trauma_medikament == "Fentanyl" and gewicht > 30:
-                # Fentanyl nur mit Paracetamol, Midazolam entfällt
                 dosis_einmal_mg = 0.05
                 dosis_einmal_ug = dosis_einmal_mg * 1000
                 max_total_ug = 2 * gewicht
@@ -234,11 +236,37 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, b
         if atemfrequenz is not None and atemfrequenz < 10:
             med_list.append(("Morphin", "3 mg i.v.", "Bei Atemfrequenz <10/min"))
 
+    # --- Abdominelle Schmerzen / Koliken ---
+    elif erkrankung == "Abdominelle Schmerzen / Koliken":
+        if schmerzskala is not None:
+            if 1 <= schmerzskala <= 3:
+                if alter >= 13 or 30 <= gewicht <= 50:
+                    paracetamol_dosis = 15 * gewicht
+                    med_list.append(("Paracetamol", f"{paracetamol_dosis:.1f} mg", "15 mg/kg KG"))
+                elif gewicht > 50:
+                    med_list.append(("Paracetamol", "1 g", "Gewicht >50 kg"))
+            elif 6 <= schmerzskala <= 10:
+                butyl_dosis = 0.3 * gewicht
+                if butyl_dosis > 40:
+                    butyl_dosis = 40
+                med_list.append(("Butylscopolamin", f"{butyl_dosis:.1f} mg", "0,3 mg/kg KG, max 40 mg"))
+
+                if gewicht >= 30:
+                    dosis_einmal_mg = 0.05
+                    dosis_einmal_ug = dosis_einmal_mg * 1000
+                    max_total_ug = 2 * gewicht
+                    max_gaben = math.floor(max_total_ug / dosis_einmal_ug)
+                    med_list.append((
+                        "Fentanyl",
+                        f"{dosis_einmal_mg:.2f} mg i.v.",
+                        f"Maximaldosis: {max_total_ug:.0f} µg → {max_gaben} Gaben möglich"
+                    ))
+
     return med_list
 
 # ---------- Button ----------
 if st.button("💉 Dosierung berechnen"):
-    ergebnisse = berechnung(alter, gewicht, erkrankung, bewusstseinslage, zugang, blutdruck, trauma_medikament, atemfrequenz)
+    ergebnisse = berechnung(alter, gewicht, erkrankung, bewusstseinslage, zugang, blutdruck, trauma_medikament, atemfrequenz, schmerzskala)
 
     st.markdown("<div class='box'>", unsafe_allow_html=True)
     st.markdown("<h2>📋 Ergebnis</h2>", unsafe_allow_html=True)
