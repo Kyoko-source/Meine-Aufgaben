@@ -1,4 +1,3 @@
-
 import streamlit as st
 
 # ---------- Seiteneinstellungen ----------
@@ -85,7 +84,8 @@ with col2:
             "Hypoglykämie",
             "Krampfanfall",
             "Schlaganfall",
-            "Kardiales Lungenödem"
+            "Kardiales Lungenödem",
+            "Hypertensiver Notfall"
         ]
     )
 
@@ -106,7 +106,7 @@ if erkrankung == "Krampfanfall":
         ["Ja, Zugang vorhanden", "Nein, kein Zugang"]
     )
 
-if erkrankung in ["Schlaganfall", "Kardiales Lungenödem"]:
+if erkrankung in ["Schlaganfall", "Kardiales Lungenödem", "Hypertensiver Notfall"]:
     blutdruck = st.number_input(
         "Systolischer Blutdruck (mmHg)",
         min_value=50,
@@ -196,6 +196,15 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, b
                 ("Furosemid", "20 mg i.v.", "Blutdruck ≤120 mmHg → nur Furosemid i.v., langsam applizieren")
             ]
 
+    # --- Hypertensiver Notfall ---
+    if erkrankung == "Hypertensiver Notfall":
+        if blutdruck is None:
+            return []
+        ziel_blutdruck = blutdruck * 0.8
+        return [
+            ("Urapidil", "5–15 mg i.v. langsam", f"Blutdruck darf maximal 20% gesenkt werden → Ziel: {ziel_blutdruck:.1f} mmHg")
+        ]
+
     return []
 
 # ---------- Button ----------
@@ -221,6 +230,8 @@ if st.button("💉 Dosierung berechnen"):
                 st.info("ℹ️ Blutdruckabhängige Therapie beachten.")
             elif erkrankung == "Kardiales Lungenödem":
                 st.info("ℹ️ Blutdruckabhängige Therapie beachten: Nitro + Furosemid oder nur Furosemid.")
+            elif erkrankung == "Hypertensiver Notfall":
+                st.info("ℹ️ Blutdruck darf maximal 20% gesenkt werden → Zielwert beachten.")
             else:
                 st.write("⚠️ Gewicht für Berechnung beachten, falls relevant.")
             st.markdown("</div>", unsafe_allow_html=True)
