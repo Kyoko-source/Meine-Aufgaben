@@ -3,32 +3,56 @@ import math
 
 # ---------- Seiteneinstellungen ----------
 st.set_page_config(
-    page_title="Medikamentendosierung – Schulungszwecke",
+    page_title="💊 Medikamentendosierung – Schulungszwecke",
     page_icon="💊",
     layout="wide"
 )
 
-# ---------- Design ----------
+# ---------- Design & CSS ----------
 st.markdown("""
 <style>
-.main { background-color: #f4f6f8; }
+body {background-color: #f0f4f8;}
 .box {
     background-color: #ffffff;
     padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0px 5px 15px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+.input-box {
+    background-color: #e8f0fe;
+    padding: 20px;
     border-radius: 12px;
-    box-shadow: 0px 0px 10px rgba(0,0,0,0.08);
+}
+.result-box {
+    background-color: #fff7e6;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 3px 8px rgba(0,0,0,0.05);
 }
 .calc {
-    background-color: #eef5ff;
-    padding: 15px;
+    background-color: #e0ffe0;
+    padding: 12px;
     border-radius: 10px;
+    margin-top: 5px;
+}
+h1, h2, h3 { color: #1f4e79; }
+.stButton>button {
+    background-color: #1f4e79;
+    color: white;
+    font-weight: bold;
+    border-radius: 10px;
+    padding: 10px 20px;
+}
+.stButton>button:hover {
+    background-color: #2a6fbf;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------- Header ----------
-st.title("💊 Medikamentendosierung – Schulungszwecke")
-st.subheader("Simulation & Ausbildung – Rettungsdienst")
+st.markdown("<h1>💊 Medikamentendosierung – Schulungszwecke</h1>", unsafe_allow_html=True)
+st.markdown("**Simulation & Ausbildung – Rettungsdienst**")
 st.warning(
     "⚠️ Ausschließlich für Schulungs- und Ausbildungszwecke. "
     "Keine Anwendung im Real- oder Einsatzbetrieb."
@@ -37,44 +61,26 @@ st.warning(
 # ---------- Schulungsmodus ----------
 schulungsmodus = st.toggle("🎓 Schulungsmodus aktivieren", value=True)
 
-# ---------- Auswahl Patientengruppe ----------
-patientengruppe = st.radio(
-    "Patientengruppe auswählen",
-    ["👶 Kind", "🧑 Erwachsener"],
-    horizontal=True
-)
+# ---------- Eingabebereich ----------
+with st.container():
+    st.markdown("<div class='box'>", unsafe_allow_html=True)
+    col1, col2 = st.columns([1, 1])
 
-# ---------- Eingaben ----------
-col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("<div class='input-box'>", unsafe_allow_html=True)
+        st.markdown("### ⚖️ Patientendaten")
+        alter = st.number_input("Alter des Patienten (Jahre)", min_value=0, max_value=120, step=1)
+        patientengruppe = st.radio("Patientengruppe", ["👶 Kind", "🧑 Erwachsener"], horizontal=True)
+        if patientengruppe == "👶 Kind":
+            gewicht = st.number_input("Gewicht (kg)", min_value=1.0, max_value=80.0, step=0.5)
+        else:
+            gewicht = st.number_input("Gewicht (optional, kg)", min_value=20.0, max_value=200.0, step=1.0)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-with col1:
-    st.markdown("### ⚖️ Patientendaten")
-    alter = st.number_input(
-        "Alter des Patienten (Jahre)",
-        min_value=0,
-        max_value=120,
-        step=1
-    )
-    if patientengruppe == "👶 Kind":
-        gewicht = st.number_input(
-            "Gewicht (kg)",
-            min_value=1.0,
-            max_value=80.0,
-            step=0.5
-        )
-    else:
-        gewicht = st.number_input(
-            "Gewicht (optional, kg)",
-            min_value=20.0,
-            max_value=200.0,
-            step=1.0
-        )
-
-with col2:
-    st.markdown("### 🩺 Erkrankung")
-    erkrankung = st.selectbox(
-        "Erkrankung auswählen",
-        [
+    with col2:
+        st.markdown("<div class='input-box'>", unsafe_allow_html=True)
+        st.markdown("### 🩺 Erkrankung auswählen")
+        erkrankung = st.selectbox("Erkrankung", [
             "Anaphylaxie",
             "Asthma/COPD",
             "Hypoglykämie",
@@ -83,40 +89,23 @@ with col2:
             "Kardiales Lungenödem",
             "Hypertensiver Notfall",
             "Starke Schmerzen bei Trauma"
-        ]
-    )
+        ])
 
-# --- Zusätzliche Eingaben ---
-bewusstseinslage = None
-zugang = None
-blutdruck = None
-trauma_medikament = None
+        bewusstseinslage = None
+        zugang = None
+        blutdruck = None
+        trauma_medikament = None
 
-if erkrankung == "Hypoglykämie":
-    bewusstseinslage = st.radio(
-        "Patientenbewusstsein",
-        ["Ansprechbar (orale Gabe möglich)", "Bewusstseinsgestört (nur i.v.)"]
-    )
-
-if erkrankung == "Krampfanfall":
-    zugang = st.radio(
-        "Zugang verfügbar?",
-        ["Ja, Zugang vorhanden", "Nein, kein Zugang"]
-    )
-
-if erkrankung in ["Schlaganfall", "Kardiales Lungenödem", "Hypertensiver Notfall"]:
-    blutdruck = st.number_input(
-        "Systolischer Blutdruck (mmHg)",
-        min_value=50,
-        max_value=300,
-        step=1
-    )
-
-if erkrankung == "Starke Schmerzen bei Trauma":
-    trauma_medikament = st.radio(
-        "Analgetika nach Paracetamol auswählen",
-        ["Esketamin", "Fentanyl"]
-    )
+        if erkrankung == "Hypoglykämie":
+            bewusstseinslage = st.radio("Patientenbewusstsein", ["Ansprechbar (orale Gabe möglich)", "Bewusstseinsgestört (nur i.v.)"])
+        if erkrankung == "Krampfanfall":
+            zugang = st.radio("Zugang verfügbar?", ["Ja, Zugang vorhanden", "Nein, kein Zugang"])
+        if erkrankung in ["Schlaganfall", "Kardiales Lungenödem", "Hypertensiver Notfall"]:
+            blutdruck = st.number_input("Systolischer Blutdruck (mmHg)", min_value=50, max_value=300, step=1)
+        if erkrankung == "Starke Schmerzen bei Trauma":
+            trauma_medikament = st.radio("Analgetika nach Paracetamol auswählen", ["Esketamin", "Fentanyl"])
+        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ---------- Berechnungslogik ----------
 def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, blutdruck=None, trauma_medikament=None):
@@ -205,25 +194,27 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, b
             else:
                 med_list.append(("Paracetamol", "1 g", "Gewicht ≥50 kg"))
 
-            # Midazolam
-            midazolam_dosis = 0
-            if alter > 60:
-                midazolam_dosis = 1
-            elif gewicht > 50:
-                midazolam_dosis = 2
-            elif gewicht > 30:
-                midazolam_dosis = 1
-            if midazolam_dosis > 0:
-                med_list.append(("Midazolam", f"{midazolam_dosis} mg", "Sedierung nach Gewicht/Alter"))
-
             # Esketamin oder Fentanyl
             if trauma_medikament == "Esketamin" and gewicht > 30:
+                # Midazolam + Esketamin
+                midazolam_dosis = 0
+                if alter > 60:
+                    midazolam_dosis = 1
+                elif gewicht > 50:
+                    midazolam_dosis = 2
+                elif gewicht > 30:
+                    midazolam_dosis = 1
+                if midazolam_dosis > 0:
+                    med_list.append(("Midazolam", f"{midazolam_dosis} mg", "Sedierung nach Gewicht/Alter"))
+
                 esk_dosis = 0.125 * gewicht
                 med_list.append(("Esketamin", f"{esk_dosis:.2f} mg", "0,125 mg/kg KG"))
+
             elif trauma_medikament == "Fentanyl" and gewicht > 30:
-                dosis_einmal_mg = 0.05  # 50 µg
-                dosis_einmal_ug = dosis_einmal_mg * 1000  # Umrechnung in µg
-                max_total_ug = 2 * gewicht  # 2 µg/kg KG
+                # Fentanyl nur mit Paracetamol, Midazolam entfällt
+                dosis_einmal_mg = 0.05
+                dosis_einmal_ug = dosis_einmal_mg * 1000
+                max_total_ug = 2 * gewicht
                 max_gaben = math.floor(max_total_ug / dosis_einmal_ug)
                 med_list.append((
                     "Fentanyl",
@@ -238,20 +229,14 @@ if st.button("💉 Dosierung berechnen"):
     ergebnisse = berechnung(alter, gewicht, erkrankung, bewusstseinslage, zugang, blutdruck, trauma_medikament)
 
     st.markdown("<div class='box'>", unsafe_allow_html=True)
-    st.markdown("## 📋 Ergebnis")
-
+    st.markdown("<h2>📋 Ergebnis</h2>", unsafe_allow_html=True)
     for med, dosis, hinweis in ergebnisse:
-        st.write(f"**Medikament:** {med}")
-        st.write(f"**Dosierung:** {dosis}")
+        st.markdown(f"**💊 Medikament:** {med}")
+        st.markdown(f"**💉 Dosierung:** {dosis}")
         if schulungsmodus:
-            st.markdown("<div class='calc'>", unsafe_allow_html=True)
-            st.write(f"**Hinweis:** {hinweis}")
-            st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='calc'>**Hinweis:** {hinweis}</div>", unsafe_allow_html=True)
         st.markdown("---")
-
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ---------- Footer ----------
 st.markdown("---")
 st.caption("Schulungsanwendung | Keine medizinische Verantwortung")
-
