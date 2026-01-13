@@ -88,13 +88,15 @@ with st.container():
             "Schlaganfall",
             "Kardiales Lungenödem",
             "Hypertensiver Notfall",
-            "Starke Schmerzen bei Trauma"
+            "Starke Schmerzen bei Trauma",
+            "Brustschmerz ACS"
         ])
 
         bewusstseinslage = None
         zugang = None
         blutdruck = None
         trauma_medikament = None
+        atemfrequenz = None
 
         if erkrankung == "Hypoglykämie":
             bewusstseinslage = st.radio("Patientenbewusstsein", ["Ansprechbar (orale Gabe möglich)", "Bewusstseinsgestört (nur i.v.)"])
@@ -104,11 +106,14 @@ with st.container():
             blutdruck = st.number_input("Systolischer Blutdruck (mmHg)", min_value=50, max_value=300, step=1)
         if erkrankung == "Starke Schmerzen bei Trauma":
             trauma_medikament = st.radio("Analgetika nach Paracetamol auswählen", ["Esketamin", "Fentanyl"])
+        if erkrankung == "Brustschmerz ACS":
+            atemfrequenz = st.number_input("Atemfrequenz (pro Minute)", min_value=0, max_value=60, step=1)
+
         st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ---------- Berechnungslogik ----------
-def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, blutdruck=None, trauma_medikament=None):
+def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, blutdruck=None, trauma_medikament=None, atemfrequenz=None):
     med_list = []
 
     # --- Anaphylaxie ---
@@ -222,11 +227,18 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, b
                     f"Maximaldosis: {max_total_ug:.0f} µg → {max_gaben} Gaben möglich"
                 ))
 
+    # --- Brustschmerz ACS ---
+    elif erkrankung == "Brustschmerz ACS":
+        med_list.append(("ASS", "250 mg i.v.", "Standarddosis bei ACS"))
+        med_list.append(("Heparin", "5000 I.E.", "Standarddosis bei ACS"))
+        if atemfrequenz is not None and atemfrequenz < 10:
+            med_list.append(("Morphin", "3 mg i.v.", "Bei Atemfrequenz <10/min"))
+
     return med_list
 
 # ---------- Button ----------
 if st.button("💉 Dosierung berechnen"):
-    ergebnisse = berechnung(alter, gewicht, erkrankung, bewusstseinslage, zugang, blutdruck, trauma_medikament)
+    ergebnisse = berechnung(alter, gewicht, erkrankung, bewusstseinslage, zugang, blutdruck, trauma_medikament, atemfrequenz)
 
     st.markdown("<div class='box'>", unsafe_allow_html=True)
     st.markdown("<h2>📋 Ergebnis</h2>", unsafe_allow_html=True)
