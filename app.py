@@ -1,4 +1,5 @@
 import streamlit as st
+import math
 
 # ---------- Seiteneinstellungen ----------
 st.set_page_config(
@@ -49,14 +50,12 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("### ⚖️ Patientendaten")
-
     alter = st.number_input(
         "Alter des Patienten (Jahre)",
         min_value=0,
         max_value=120,
         step=1
     )
-
     if patientengruppe == "👶 Kind":
         gewicht = st.number_input(
             "Gewicht (kg)",
@@ -199,8 +198,8 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, b
 
     # --- Starke Schmerzen bei Trauma ---
     elif erkrankung == "Starke Schmerzen bei Trauma":
-        # Paracetamol
         if alter >= 12 or gewicht >= 30:
+            # Paracetamol
             if gewicht < 50:
                 paracetamol_dosis = 15 * gewicht
                 med_list.append(("Paracetamol", f"{paracetamol_dosis:.1f} mg", "15 mg/kg KG"))
@@ -223,8 +222,14 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, b
                 esk_dosis = 0.125 * gewicht
                 med_list.append(("Esketamin", f"{esk_dosis:.2f} mg", "0,125 mg/kg KG"))
             elif trauma_medikament == "Fentanyl" and gewicht > 30:
-                fent_dosis = 0.05 * gewicht
-                med_list.append(("Fentanyl", f"{fent_dosis:.2f} mg", "0,05 mg/kg KG"))
+                fent_dosis_einmal = 0.05
+                fent_max_total = 2 * gewicht  # mg
+                max_gaben = math.floor(fent_max_total / fent_dosis_einmal)
+                med_list.append((
+                    "Fentanyl",
+                    f"{fent_dosis_einmal:.2f} mg i.v. alle 4 Min",
+                    f"Maximaldosis: {fent_max_total:.2f} mg → {max_gaben} Gaben möglich"
+                ))
 
     return med_list
 
