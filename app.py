@@ -57,12 +57,24 @@ with col1:
             max_value=80.0,
             step=0.5
         )
+        alter = st.number_input(
+            "Alter (Jahre)",
+            min_value=0,
+            max_value=17,
+            step=1
+        )
     else:
         gewicht = st.number_input(
-            "Gewicht (optional)",
+            "Gewicht (optional, kg)",
             min_value=40.0,
             max_value=200.0,
             step=1.0
+        )
+        alter = st.number_input(
+            "Alter (Jahre)",
+            min_value=18,
+            max_value=120,
+            step=1
         )
 
 with col2:
@@ -78,29 +90,55 @@ with col2:
     )
 
 # ---------- Berechnungslogik ----------
-def berechnung(gewicht, gruppe, erkrankung):
+def berechnung(gewicht, alter, erkrankung):
 
+    # --- Anaphylaxie altersbasiert ---
     if erkrankung == "Anaphylaxie":
-        dosis = min(0.01 * gewicht, 0.5)
-        return "Adrenalin", f"{dosis:.2f} mg i.m.", "0,01 mg/kg, max. 0,5 mg"
+        if alter < 6:
+            dosis = 0.15
+        elif 6 <= alter < 12:
+            dosis = 0.3
+        else:
+            dosis = 0.5
 
+        return (
+            "Adrenalin",
+            f"{dosis:.2f} mg i.m.",
+            "Altersbasierte Dosierung (<6 J: 0,15 mg | 6–12 J: 0,3 mg | ≥12 J: 0,5 mg)"
+        )
+
+    # --- Krampfanfall ---
     if erkrankung == "Krampfanfall":
         dosis = min(0.2 * gewicht, 10)
-        return "Midazolam", f"{dosis:.1f} mg", "0,2 mg/kg, max. 10 mg"
+        return (
+            "Midazolam",
+            f"{dosis:.1f} mg i.v./bukkal",
+            "0,2 mg/kg, max. 10 mg"
+        )
 
+    # --- Starke Schmerzen ---
     if erkrankung == "Starke Schmerzen":
         dosis = min(0.1 * gewicht, 10)
-        return "Morphin", f"{dosis:.1f} mg i.v.", "0,1 mg/kg, max. 10 mg"
+        return (
+            "Morphin",
+            f"{dosis:.1f} mg i.v.",
+            "0,1 mg/kg, max. 10 mg"
+        )
 
+    # --- Fieber ---
     if erkrankung == "Fieber":
         dosis = min(15 * gewicht, 1000)
-        return "Paracetamol", f"{dosis:.0f} mg", "15 mg/kg, max. 1.000 mg"
+        return (
+            "Paracetamol",
+            f"{dosis:.0f} mg p.o./rektal",
+            "15 mg/kg, max. 1.000 mg"
+        )
 
     return None
 
 # ---------- Button ----------
 if st.button("💉 Dosierung berechnen"):
-    med, dosis, regel = berechnung(gewicht, patientengruppe, erkrankung)
+    med, dosis, regel = berechnung(gewicht, alter, erkrankung)
 
     st.markdown("<div class='box'>", unsafe_allow_html=True)
     st.markdown("## 📋 Ergebnis")
@@ -112,7 +150,13 @@ if st.button("💉 Dosierung berechnen"):
         st.markdown("<div class='calc'>", unsafe_allow_html=True)
         st.markdown("### 🎓 Schulungshinweise")
         st.write(f"**Berechnungsregel:** {regel}")
-        st.write(f"**Rechenweg:** Gewicht × Dosierungsfaktor")
+        if erkrankung == "Anaphylaxie":
+            st.info(
+                "ℹ️ Bei Anaphylaxie erfolgt die Dosierung **altersbasiert**, "
+                "nicht nach Körpergewicht."
+            )
+        else:
+            st.write(f"**Rechenweg:** Gewicht × Dosierungsfaktor")
         st.write("⚠️ Maximaldosis immer beachten")
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -121,3 +165,4 @@ if st.button("💉 Dosierung berechnen"):
 # ---------- Footer ----------
 st.markdown("---")
 st.caption("Schulungsanwendung | Keine medizinische Verantwortung")
+
