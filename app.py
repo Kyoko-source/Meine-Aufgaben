@@ -5,24 +5,6 @@ import json
 import os
 import hashlib
 
-# Passwortabfrage (zentriert & gestylt)
-def check_password():
-    def password_entered():
-        if st.session_state["password"] == "RettSüd15":
-            st.session_state["passwort_akzeptiert"] = True
-        else:
-            st.session_state["passwort_akzeptiert"] = False
-            st.error("❌ Falsches Passwort. Bitte versuche es erneut.")
-
-    if "passwort_akzeptiert" not in st.session_state or not st.session_state["passwort_akzeptiert"]:
-        col1, col2, col3 = st.columns([1,2,1])
-        with col2:
-            st.markdown("## 🔐 Zugriff geschützt")
-            st.markdown("Bitte Passwort eingeben, um fortzufahren.")
-            st.text_input("Passwort", type="password", on_change=password_entered, key="password")
-        st.stop()
-
-check_password()
 
 st.set_page_config(page_title="RTW Aufgabenplan", page_icon="🚑", layout="wide")
 
@@ -328,3 +310,4 @@ col4.markdown(f"""
         <p style='font-size:18px; margin:0;'>{feiertag_text}</p>
     </div>
 """, unsafe_allow_html=True)
+
