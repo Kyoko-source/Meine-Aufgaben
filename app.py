@@ -50,7 +50,6 @@ col1, col2 = st.columns(2)
 with col1:
     st.markdown("### ⚖️ Patientendaten")
 
-    # Alter immer erfassen
     alter = st.number_input(
         "Alter des Patienten (Jahre)",
         min_value=0,
@@ -58,7 +57,6 @@ with col1:
         step=1
     )
 
-    # Gewicht nach Gruppe
     if patientengruppe == "👶 Kind":
         gewicht = st.number_input(
             "Gewicht (kg)",
@@ -85,14 +83,16 @@ with col2:
             "Krampfanfall",
             "Schlaganfall",
             "Kardiales Lungenödem",
-            "Hypertensiver Notfall"
+            "Hypertensiver Notfall",
+            "Starke Schmerzen bei Trauma"
         ]
     )
 
-# --- Zusätzliche Eingaben für bestimmte Erkrankungen ---
+# --- Zusätzliche Eingaben ---
 bewusstseinslage = None
 zugang = None
 blutdruck = None
+trauma_medikament = None
 
 if erkrankung == "Hypoglykämie":
     bewusstseinslage = st.radio(
@@ -114,8 +114,15 @@ if erkrankung in ["Schlaganfall", "Kardiales Lungenödem", "Hypertensiver Notfal
         step=1
     )
 
+if erkrankung == "Starke Schmerzen bei Trauma":
+    trauma_medikament = st.radio(
+        "Analgetika nach Paracetamol auswählen",
+        ["Esketamin", "Fentanyl"]
+    )
+
 # ---------- Berechnungslogik ----------
-def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, blutdruck=None):
+def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, blutdruck=None, trauma_medikament=None):
+    med_list = []
 
     # --- Anaphylaxie ---
     if erkrankung == "Anaphylaxie":
@@ -125,91 +132,105 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, b
             dosis = 0.3
         else:
             dosis = 0.5
-        return [("Adrenalin", f"{dosis:.2f} mg i.m.", "Altersbasierte Dosierung (<6 J:0,15 mg | 6–12 J:0,3 mg | ≥12 J:0,5 mg)")]
+        med_list.append(("Adrenalin", f"{dosis:.2f} mg i.m.", "Altersbasierte Dosierung (<6 J:0,15 mg | 6–12 J:0,3 mg | ≥12 J:0,5 mg)"))
 
     # --- Asthma/COPD ---
-    if erkrankung == "Asthma/COPD":
+    elif erkrankung == "Asthma/COPD":
         if alter >= 12:
-            meds = [
+            med_list.extend([
                 ("Salbutamol", "2,5 mg vernebelt", "Erwachsene Dosis"),
                 ("Prednisolon", "100 mg i.v.", "Erwachsene Dosis"),
                 ("Ipratropiumbromid", "500 µg vernebelt", "Erwachsene Dosis")
-            ]
+            ])
         elif 4 <= alter < 12:
-            meds = [
+            med_list.extend([
                 ("Salbutamol", "1,25 mg vernebelt", "Kinderdosis"),
                 ("Prednisolon", "100 mg rektal", "Kinderdosis")
-            ]
-        else:  # unter 4 Jahre
-            meds = [
+            ])
+        else:
+            med_list.extend([
                 ("Adrenalin", "2 mg + 2 ml NaCl vernebelt", "Säuglingsdosis"),
                 ("Prednisolon", "100 mg rektal", "Säuglingsdosis")
-            ]
-        return meds
+            ])
 
     # --- Hypoglykämie ---
-    if erkrankung == "Hypoglykämie":
-        if bewusstseinslage is None:
-            return [("Glucose", "bis 16 g i.v. langsam", "Langsame Applikation")]
+    elif erkrankung == "Hypoglykämie":
         if bewusstseinslage.startswith("Ansprechbar"):
-            return [("Glucose", "bis 16 g p.o. oder i.v.", "Patient ansprechbar → orale Gabe möglich, sonst langsam i.v.")]
+            med_list.append(("Glucose", "bis 16 g p.o. oder i.v.", "Patient ansprechbar → orale Gabe möglich, sonst langsam i.v."))
         else:
-            return [("Glucose", "bis 16 g i.v.", "Bewusstseinsgestört → nur i.v., langsam applizieren")]
+            med_list.append(("Glucose", "bis 16 g i.v.", "Bewusstseinsgestört → nur i.v., langsam applizieren"))
 
     # --- Krampfanfall ---
-    if erkrankung == "Krampfanfall":
-        if zugang is None:
-            return []
+    elif erkrankung == "Krampfanfall":
         if zugang.startswith("Ja"):
             dosis_mg = 0.05 * gewicht
-            return [("Midazolam", f"{dosis_mg:.2f} mg i.v. langsam", "0,05 mg/kg KG, langsam i.v. bei Zugang möglich")]
+            med_list.append(("Midazolam", f"{dosis_mg:.2f} mg i.v. langsam", "0,05 mg/kg KG, langsam i.v. bei Zugang möglich"))
         else:
             if gewicht <= 10:
-                return [("Midazolam", "2,5 mg = 0,5 ml", "Zugang nicht möglich, 0-10 kg")]
+                med_list.append(("Midazolam", "2,5 mg = 0,5 ml", "Zugang nicht möglich, 0-10 kg"))
             elif gewicht <= 20:
-                return [("Midazolam", "5 mg = 1 ml", "Zugang nicht möglich, 10-20 kg")]
+                med_list.append(("Midazolam", "5 mg = 1 ml", "Zugang nicht möglich, 10-20 kg"))
             else:
-                return [("Midazolam", "10 mg = 2 ml", "Zugang nicht möglich, >20 kg")]
+                med_list.append(("Midazolam", "10 mg = 2 ml", "Zugang nicht möglich, >20 kg"))
 
     # --- Schlaganfall ---
-    if erkrankung == "Schlaganfall":
-        if blutdruck is None:
-            return []
+    elif erkrankung == "Schlaganfall":
         if blutdruck < 120:
-            return [("Jonosteril", "Volumengabe nach Bedarf", "Blutdruck <120 mmHg → Volumengabe")]
+            med_list.append(("Jonosteril", "Volumengabe nach Bedarf", "Blutdruck <120 mmHg → Volumengabe"))
         elif blutdruck > 220:
-            return [("Urapidil", "5–15 mg i.v. langsam", "Blutdruck >220 mmHg → Urapidil langsam i.v.")]
+            med_list.append(("Urapidil", "5–15 mg i.v. langsam", "Blutdruck >220 mmHg → Urapidil langsam i.v."))
         else:
-            return [("Keine akute medikamentöse Therapie", "–", "Blutdruck im Normbereich")]
+            med_list.append(("Keine akute medikamentöse Therapie", "–", "Blutdruck im Normbereich"))
 
     # --- Kardiales Lungenödem ---
-    if erkrankung == "Kardiales Lungenödem":
-        if blutdruck is None:
-            return []
+    elif erkrankung == "Kardiales Lungenödem":
         if blutdruck > 120:
-            return [
+            med_list.extend([
                 ("Nitro", "0,4–0,8 mg sublingual", "Blutdruck >120 mmHg → Nitro unter die Zunge"),
                 ("Furosemid", "20 mg i.v.", "Immer langsam i.v. applizieren")
-            ]
+            ])
         else:
-            return [
-                ("Furosemid", "20 mg i.v.", "Blutdruck ≤120 mmHg → nur Furosemid i.v., langsam applizieren")
-            ]
+            med_list.append(("Furosemid", "20 mg i.v.", "Blutdruck ≤120 mmHg → nur Furosemid i.v., langsam applizieren"))
 
     # --- Hypertensiver Notfall ---
-    if erkrankung == "Hypertensiver Notfall":
-        if blutdruck is None:
-            return []
+    elif erkrankung == "Hypertensiver Notfall":
         ziel_blutdruck = blutdruck * 0.8
-        return [
-            ("Urapidil", "5–15 mg i.v. langsam", f"Blutdruck darf maximal 20% gesenkt werden → Ziel: {ziel_blutdruck:.1f} mmHg")
-        ]
+        med_list.append(("Urapidil", "5–15 mg i.v. langsam", f"Blutdruck darf maximal 20% gesenkt werden → Ziel: {ziel_blutdruck:.1f} mmHg"))
 
-    return []
+    # --- Starke Schmerzen bei Trauma ---
+    elif erkrankung == "Starke Schmerzen bei Trauma":
+        # Paracetamol
+        if alter >= 12 or gewicht >= 30:
+            if gewicht < 50:
+                paracetamol_dosis = 15 * gewicht
+                med_list.append(("Paracetamol", f"{paracetamol_dosis:.1f} mg", "15 mg/kg KG"))
+            else:
+                med_list.append(("Paracetamol", "1 g", "Gewicht ≥50 kg"))
+
+            # Midazolam
+            midazolam_dosis = 0
+            if alter > 60:
+                midazolam_dosis = 1
+            elif gewicht > 50:
+                midazolam_dosis = 2
+            elif gewicht > 30:
+                midazolam_dosis = 1
+            if midazolam_dosis > 0:
+                med_list.append(("Midazolam", f"{midazolam_dosis} mg", "Sedierung nach Gewicht/Alter"))
+
+            # Esketamin oder Fentanyl
+            if trauma_medikament == "Esketamin" and gewicht > 30:
+                esk_dosis = 0.125 * gewicht
+                med_list.append(("Esketamin", f"{esk_dosis:.2f} mg", "0,125 mg/kg KG"))
+            elif trauma_medikament == "Fentanyl" and gewicht > 30:
+                fent_dosis = 0.05 * gewicht
+                med_list.append(("Fentanyl", f"{fent_dosis:.2f} mg", "0,05 mg/kg KG"))
+
+    return med_list
 
 # ---------- Button ----------
 if st.button("💉 Dosierung berechnen"):
-    ergebnisse = berechnung(alter, gewicht, erkrankung, bewusstseinslage, zugang, blutdruck)
+    ergebnisse = berechnung(alter, gewicht, erkrankung, bewusstseinslage, zugang, blutdruck, trauma_medikament)
 
     st.markdown("<div class='box'>", unsafe_allow_html=True)
     st.markdown("## 📋 Ergebnis")
@@ -220,20 +241,6 @@ if st.button("💉 Dosierung berechnen"):
         if schulungsmodus:
             st.markdown("<div class='calc'>", unsafe_allow_html=True)
             st.write(f"**Hinweis:** {hinweis}")
-            if erkrankung == "Anaphylaxie":
-                st.info("ℹ️ Dosierung erfolgt altersbasiert, nicht nach Gewicht.")
-            elif erkrankung == "Hypoglykämie":
-                st.info("ℹ️ Beachte Bewusstseinslage: oral möglich nur wenn ansprechbar.")
-            elif erkrankung == "Krampfanfall":
-                st.info("ℹ️ Dosierung nach Gewicht und Zugangsverfügbarkeit.")
-            elif erkrankung == "Schlaganfall":
-                st.info("ℹ️ Blutdruckabhängige Therapie beachten.")
-            elif erkrankung == "Kardiales Lungenödem":
-                st.info("ℹ️ Blutdruckabhängige Therapie beachten: Nitro + Furosemid oder nur Furosemid.")
-            elif erkrankung == "Hypertensiver Notfall":
-                st.info("ℹ️ Blutdruck darf maximal 20% gesenkt werden → Zielwert beachten.")
-            else:
-                st.write("⚠️ Gewicht für Berechnung beachten, falls relevant.")
             st.markdown("</div>", unsafe_allow_html=True)
         st.markdown("---")
 
