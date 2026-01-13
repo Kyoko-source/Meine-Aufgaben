@@ -82,13 +82,15 @@ with col2:
             "Anaphylaxie",
             "Asthma/COPD",
             "Hypoglykämie",
-            "Krampfanfall"
+            "Krampfanfall",
+            "Schlaganfall"
         ]
     )
 
 # --- Zusätzliche Eingaben für bestimmte Erkrankungen ---
 bewusstseinslage = None
 zugang = None
+blutdruck = None
 
 if erkrankung == "Hypoglykämie":
     bewusstseinslage = st.radio(
@@ -102,8 +104,16 @@ if erkrankung == "Krampfanfall":
         ["Ja, Zugang vorhanden", "Nein, kein Zugang"]
     )
 
+if erkrankung == "Schlaganfall":
+    blutdruck = st.number_input(
+        "Systolischer Blutdruck (mmHg)",
+        min_value=50,
+        max_value=300,
+        step=1
+    )
+
 # ---------- Berechnungslogik ----------
-def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None):
+def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, blutdruck=None):
 
     # --- Anaphylaxie ---
     if erkrankung == "Anaphylaxie":
@@ -153,40 +163,4 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None):
             return [("Midazolam", f"{dosis_mg:.2f} mg i.v. langsam", "0,05 mg/kg KG, langsam i.v. bei Zugang möglich")]
         else:
             if gewicht <= 10:
-                return [("Midazolam", "2,5 mg = 0,5 ml", "Zugang nicht möglich, 0-10 kg")]
-            elif gewicht <= 20:
-                return [("Midazolam", "5 mg = 1 ml", "Zugang nicht möglich, 10-20 kg")]
-            else:
-                return [("Midazolam", "10 mg = 2 ml", "Zugang nicht möglich, >20 kg")]
-
-    return []
-
-# ---------- Button ----------
-if st.button("💉 Dosierung berechnen"):
-    ergebnisse = berechnung(alter, gewicht, erkrankung, bewusstseinslage, zugang)
-
-    st.markdown("<div class='box'>", unsafe_allow_html=True)
-    st.markdown("## 📋 Ergebnis")
-
-    for med, dosis, hinweis in ergebnisse:
-        st.write(f"**Medikament:** {med}")
-        st.write(f"**Dosierung:** {dosis}")
-        if schulungsmodus:
-            st.markdown("<div class='calc'>", unsafe_allow_html=True)
-            st.write(f"**Hinweis:** {hinweis}")
-            if erkrankung == "Anaphylaxie":
-                st.info("ℹ️ Dosierung erfolgt altersbasiert, nicht nach Gewicht.")
-            elif erkrankung == "Hypoglykämie":
-                st.info("ℹ️ Beachte Bewusstseinslage: oral möglich nur wenn ansprechbar.")
-            elif erkrankung == "Krampfanfall":
-                st.info("ℹ️ Dosierung nach Gewicht und Zugangsverfügbarkeit.")
-            else:
-                st.write("⚠️ Gewicht für Berechnung beachten, falls relevant.")
-            st.markdown("</div>", unsafe_allow_html=True)
-        st.markdown("---")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ---------- Footer ----------
-st.markdown("---")
-st.caption("Schulungsanwendung | Keine medizinische Verantwortung")
+                return [("Midazolam", "2,5 mg = 0,5 ml", "Zugang nicht mögl]()
