@@ -81,20 +81,29 @@ with col2:
         [
             "Anaphylaxie",
             "Asthma/COPD",
-            "Hypoglykämie"
+            "Hypoglykämie",
+            "Krampfanfall"
         ]
     )
 
-# Für Hypoglykämie Bewusstseinsabfrage
+# --- Zusätzliche Eingaben für bestimmte Erkrankungen ---
 bewusstseinslage = None
+zugang = None
+
 if erkrankung == "Hypoglykämie":
     bewusstseinslage = st.radio(
         "Patientenbewusstsein",
         ["Ansprechbar (orale Gabe möglich)", "Bewusstseinsgestört (nur i.v.)"]
     )
 
+if erkrankung == "Krampfanfall":
+    zugang = st.radio(
+        "Zugang verfügbar?",
+        ["Ja, Zugang vorhanden", "Nein, kein Zugang"]
+    )
+
 # ---------- Berechnungslogik ----------
-def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None):
+def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None):
 
     # --- Anaphylaxie ---
     if erkrankung == "Anaphylaxie":
@@ -131,15 +140,30 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None):
         if bewusstseinslage is None:
             return [("Glucose", "bis 16 g i.v. langsam", "Langsame Applikation")]
         if bewusstseinslage.startswith("Ansprechbar"):
-            return [("Glucose", "bis 16 g i.v.", "Patient ansprechbar → orale Gabe möglich, sonst langsam i.v.")]
+            return [("Glucose", "bis 16 g p.o. oder i.v.", "Patient ansprechbar → orale Gabe möglich, sonst langsam i.v.")]
         else:
             return [("Glucose", "bis 16 g i.v.", "Bewusstseinsgestört → nur i.v., langsam applizieren")]
+
+    # --- Krampfanfall ---
+    if erkrankung == "Krampfanfall":
+        if zugang is None:
+            return []
+        if zugang.startswith("Ja"):
+            dosis_mg = 0.05 * gewicht
+            return [("Midazolam", f"{dosis_mg:.2f} mg i.v. langsam", "0,05 mg/kg KG, langsam i.v. bei Zugang möglich")]
+        else:
+            if gewicht <= 10:
+                return [("Midazolam", "2,5 mg = 0,5 ml", "Zugang nicht möglich, 0-10 kg")]
+            elif gewicht <= 20:
+                return [("Midazolam", "5 mg = 1 ml", "Zugang nicht möglich, 10-20 kg")]
+            else:
+                return [("Midazolam", "10 mg = 2 ml", "Zugang nicht möglich, >20 kg")]
 
     return []
 
 # ---------- Button ----------
 if st.button("💉 Dosierung berechnen"):
-    ergebnisse = berechnung(alter, gewicht, erkrankung, bewusstseinslage)
+    ergebnisse = berechnung(alter, gewicht, erkrankung, bewusstseinslage, zugang)
 
     st.markdown("<div class='box'>", unsafe_allow_html=True)
     st.markdown("## 📋 Ergebnis")
@@ -154,6 +178,8 @@ if st.button("💉 Dosierung berechnen"):
                 st.info("ℹ️ Dosierung erfolgt altersbasiert, nicht nach Gewicht.")
             elif erkrankung == "Hypoglykämie":
                 st.info("ℹ️ Beachte Bewusstseinslage: oral möglich nur wenn ansprechbar.")
+            elif erkrankung == "Krampfanfall":
+                st.info("ℹ️ Dosierung nach Gewicht und Zugangsverfügbarkeit.")
             else:
                 st.write("⚠️ Gewicht für Berechnung beachten, falls relevant.")
             st.markdown("</div>", unsafe_allow_html=True)
@@ -164,4 +190,3 @@ if st.button("💉 Dosierung berechnen"):
 # ---------- Footer ----------
 st.markdown("---")
 st.caption("Schulungsanwendung | Keine medizinische Verantwortung")
-
