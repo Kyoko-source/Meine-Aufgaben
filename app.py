@@ -29,7 +29,6 @@ st.markdown("""
 # ---------- Header ----------
 st.title("💊 Medikamentendosierung – Schulungszwecke")
 st.subheader("Simulation & Ausbildung – Rettungsdienst")
-
 st.warning(
     "⚠️ Ausschließlich für Schulungs- und Ausbildungszwecke. "
     "Keine Anwendung im Real- oder Einsatzbetrieb."
@@ -222,16 +221,15 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, b
                 esk_dosis = 0.125 * gewicht
                 med_list.append(("Esketamin", f"{esk_dosis:.2f} mg", "0,125 mg/kg KG"))
             elif trauma_medikament == "Fentanyl" and gewicht > 30:
-    dosis_einmal_mg = 0.05  # 50 µg
-    dosis_einmal_ug = dosis_einmal_mg * 1000  # Umrechnung in µg
-    max_total_ug = 2 * gewicht  # 2 µg/kg KG
-    max_gaben = math.floor(max_total_ug / dosis_einmal_ug)
-    med_list.append((
-        "Fentanyl",
-        f"{dosis_einmal_mg:.2f} mg i.v. alle 4 Min",
-        f"Maximaldosis: {max_total_ug:.0f} µg → {max_gaben} Gaben möglich"
-    ))
-
+                dosis_einmal_mg = 0.05  # 50 µg
+                dosis_einmal_ug = dosis_einmal_mg * 1000  # Umrechnung in µg
+                max_total_ug = 2 * gewicht  # 2 µg/kg KG
+                max_gaben = math.floor(max_total_ug / dosis_einmal_ug)
+                med_list.append((
+                    "Fentanyl",
+                    f"{dosis_einmal_mg:.2f} mg i.v. alle 4 Min",
+                    f"Maximaldosis: {max_total_ug:.0f} µg → {max_gaben} Gaben möglich"
+                ))
 
     return med_list
 
@@ -256,4 +254,3 @@ if st.button("💉 Dosierung berechnen"):
 # ---------- Footer ----------
 st.markdown("---")
 st.caption("Schulungsanwendung | Keine medizinische Verantwortung")
-
