@@ -131,7 +131,7 @@ def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None):
         if bewusstseinslage is None:
             return [("Glucose", "bis 16 g i.v. langsam", "Langsame Applikation")]
         if bewusstseinslage.startswith("Ansprechbar"):
-            return [("Glucose", "bis 16 g p.o. oder i.v.", "Patient ansprechbar → orale Gabe möglich, sonst langsam i.v.")]
+            return [("Glucose", "bis 16 g i.v.", "Patient ansprechbar → orale Gabe möglich, sonst langsam i.v.")]
         else:
             return [("Glucose", "bis 16 g i.v.", "Bewusstseinsgestört → nur i.v., langsam applizieren")]
 
@@ -164,3 +164,4 @@ if st.button("💉 Dosierung berechnen"):
 # ---------- Footer ----------
 st.markdown("---")
 st.caption("Schulungsanwendung | Keine medizinische Verantwortung")
+
