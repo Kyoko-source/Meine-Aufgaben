@@ -19,7 +19,7 @@ body {
 }
 
 /* === Karten === */
-.card, .calc, .admin {
+.card, .calc, .admin, .med-list {
     background-color: #ffffff;
     padding: 25px;
     border-radius: 20px;
@@ -27,7 +27,7 @@ body {
     margin-bottom: 20px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.card:hover, .calc:hover, .admin:hover {
+.card:hover, .calc:hover, .admin:hover, .med-list:hover {
     transform: translateY(-3px);
     box-shadow: 0 12px 24px rgba(0,0,0,0.15);
 }
@@ -75,19 +75,6 @@ body {
     border-left: 4px solid #ff9800;
 }
 
-/* === Medikamentenliste === */
-.med-list {
-    background: #f5f7fa;
-    padding: 15px;
-    border-radius: 15px;
-    margin-bottom: 12px;
-    transition: transform 0.2s ease;
-}
-.med-list:hover {
-    transform: translateX(3px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
-}
-
 /* === Warnungen === */
 .stWarning {
     background-color: #fff3cd !important;
@@ -95,6 +82,56 @@ body {
     border-radius: 12px;
     padding: 15px;
     font-weight: 500;
+}
+
+/* === Darkmode Anpassungen === */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #121212;
+        color: #e0e0e0;
+    }
+
+    .card, .calc, .admin, .med-list {
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+        border-color: #444444;
+    }
+
+    .header {
+        color: #4cafef;
+    }
+
+    .calc {
+        background-color: #004d00;
+        border-left: 4px solid #4caf50;
+        color: #e0ffe0;
+    }
+
+    .admin {
+        background-color: #3e2f00;
+        border-left: 4px solid #ff9800;
+        color: #fff0b3;
+    }
+
+    .med-list {
+        background-color: #2a2a2a;
+        color: #e0e0e0;
+    }
+
+    .stButton>button {
+        color: #ffffff;
+    }
+
+    .stWarning {
+        background-color: #333300 !important;
+        color: #fff3cd !important;
+    }
+
+    .stNumberInput>div>input, .stSelectbox>div>div>div {
+        background-color: #2a2a2a;
+        color: #e0e0e0;
+        border: 1px solid #555555;
+    }
 }
 </style>
 """, unsafe_allow_html=True)
