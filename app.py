@@ -19,19 +19,12 @@ body { background-color: #f2f6fa; }
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     margin-bottom: 20px;
 }
-.header {
-    color: #1f4e79;
-}
+.header { color: #1f4e79; }
 .calc {
     background-color: #e8fff0;
     padding: 12px;
     border-radius: 10px;
     margin-top: 6px;
-}
-.warn {
-    background-color: #fff3cd;
-    padding: 12px;
-    border-radius: 10px;
 }
 .stButton>button {
     background-color: #1f4e79;
@@ -48,9 +41,9 @@ body { background-color: #f2f6fa; }
 
 # ================== HEADER ==================
 st.markdown("<h1 class='header'>💊 Medikamentendosierung – Schulungszwecke</h1>", unsafe_allow_html=True)
-st.warning("⚠️ Ausschließlich für Schulungs- und Ausbildungszwecke – keine reale Anwendung.")
+st.warning("⚠️ Ausschließlich für Schulungs- und Ausbildungszwecke – keine reale Anwendung!")
 
-schulungsmodus = st.toggle("🎓 Schulungsmodus (Rechenwege anzeigen)", value=True)
+schulungsmodus = st.toggle("🎓 Schulungsmodus (Erklärungen anzeigen)", value=True)
 
 # ================== EINGABEN ==================
 with st.container():
@@ -59,8 +52,8 @@ with st.container():
 
     with col1:
         st.subheader("👤 Patient")
-        alter = st.number_input("Alter (Jahre)", 0, 120, 30)
-        gewicht = st.number_input("Gewicht (kg)", 1.0, 200.0, 70.0)
+        alter = st.number_input("Alter (Jahre)", 0, 120, 45)
+        gewicht = st.number_input("Gewicht (kg)", 1.0, 200.0, 80.0)
 
     with col2:
         st.subheader("🩺 Erkrankung")
@@ -77,7 +70,8 @@ with st.container():
                 "Starke Schmerzen bei Trauma",
                 "Brustschmerz ACS",
                 "Abdominelle Schmerzen / Koliken",
-                "Übelkeit / Erbrechen"
+                "Übelkeit / Erbrechen",
+                "Instabile Bradykardie"
             ]
         )
 
@@ -86,6 +80,7 @@ with st.container():
         trauma_wahl = None
         atemfrequenz = None
         schmerzskala = None
+        asystolie_gefahr = None
 
         if erkrankung in ["Schlaganfall", "Kardiales Lungenödem", "Hypertensiver Notfall"]:
             blutdruck = st.number_input("Systolischer Blutdruck (mmHg)", 50, 300, 140)
@@ -105,50 +100,62 @@ with st.container():
         if erkrankung == "Abdominelle Schmerzen / Koliken":
             schmerzskala = st.slider("Schmerzskala (1–10)", 1, 10, 5)
 
+        if erkrankung == "Instabile Bradykardie":
+            asystolie_gefahr = st.radio(
+                "Gefahr einer Asystolie?",
+                ["Ja", "Nein"]
+            )
+
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ================== BERECHNUNG ==================
 def berechne():
     meds = []
 
-    # ---------- ÜBELKEIT / ERBRECHEN ----------
-    if erkrankung == "Übelkeit / Erbrechen":
-        if alter >= 60:
+    # ---------- INSTABILE BRADYKARDIE ----------
+    if erkrankung == "Instabile Bradykardie":
+        if asystolie_gefahr == "Ja":
             meds.append((
-                "Ondansetron",
-                "4 mg i.v.",
-                "Einmalig, ggf. 1× wiederholbar"
+                "Adrenalin-Infusion",
+                "1 mg Adrenalin in 500 ml Jonosteril",
+                "Fließgeschwindigkeit: 1 Tropfen pro Sekunde"
             ))
         else:
             meds.append((
-                "Dimenhydrinat",
-                "31 mg i.v.",
-                "Zusätzlich 31 mg in die Infusion geben"
+                "Atropin",
+                "0,5 mg i.v.",
+                "Wiederholbar bis max. 3 mg Gesamtmenge"
             ))
+
+    # ---------- ÜBELKEIT / ERBRECHEN ----------
+    if erkrankung == "Übelkeit / Erbrechen":
+        if alter >= 60:
+            meds.append(("Ondansetron", "4 mg i.v.", "Einmalig, ggf. 1× wiederholbar"))
+        else:
+            meds.append(("Dimenhydrinat", "31 mg i.v.", "Zusätzlich 31 mg in die Infusion"))
 
     # ---------- BRUSTSCHMERZ ACS ----------
     if erkrankung == "Brustschmerz ACS":
-        meds.append(("ASS", "250 mg i.v.", "Standardtherapie ACS"))
-        meds.append(("Heparin", "5000 I.E. i.v.", "Unfraktioniertes Heparin"))
+        meds.append(("ASS", "250 mg i.v.", ""))
+        meds.append(("Heparin", "5000 I.E. i.v.", ""))
         if atemfrequenz is not None and atemfrequenz < 10:
-            meds.append(("Morphin", "3 mg i.v.", "Nur bei AF < 10/min"))
+            meds.append(("Morphin", "3 mg i.v.", "AF < 10/min"))
 
     # ---------- HYPERTENSIVER NOTFALL ----------
     if erkrankung == "Hypertensiver Notfall" and blutdruck:
         ziel = int(blutdruck * 0.8)
-        meds.append(("Urapidil", "5–15 mg langsam i.v.", f"Ziel-Sys ca. {ziel} mmHg (−20 %)"))
+        meds.append(("Urapidil", "5–15 mg langsam i.v.", f"Ziel-Sys ca. {ziel} mmHg"))
 
     # ---------- KARDIALES LUNGENÖDEM ----------
     if erkrankung == "Kardiales Lungenödem" and blutdruck:
         meds.append(("Furosemid", "20 mg i.v.", "Langsam i.v."))
         if blutdruck > 120:
-            meds.append(("Nitro", "0,4–0,8 mg sublingual", "Nur bei RR > 120 mmHg"))
+            meds.append(("Nitro", "0,4–0,8 mg sublingual", "RR > 120 mmHg"))
 
     # ---------- KRAMPFANFALL ----------
     if erkrankung == "Krampfanfall":
         if zugang == "Ja":
-            dosis = 0.05 * gewicht
-            meds.append(("Midazolam", f"{dosis:.2f} mg i.v.", "0,05 mg/kg KG langsam"))
+            meds.append(("Midazolam", f"{0.05 * gewicht:.2f} mg i.v.", "0,05 mg/kg KG"))
         else:
             if gewicht <= 10:
                 meds.append(("Midazolam", "2,5 mg (0,5 ml)", "Kein Zugang"))
@@ -159,22 +166,7 @@ def berechne():
 
     # ---------- HYPOGLYKÄMIE ----------
     if erkrankung == "Hypoglykämie":
-        meds.append(("Glukose", "bis 16 g i.v.", "Langsam i.v., alternativ oral bei Wachheit"))
-
-    # ---------- ASTHMA / COPD ----------
-    if erkrankung == "Asthma/COPD":
-        if alter >= 12:
-            meds.extend([
-                ("Salbutamol", "2,5 mg vernebelt", "Bronchodilatator"),
-                ("Ipratropiumbromid", "500 µg vernebelt", "Zusatz"),
-                ("Prednisolon", "100 mg i.v.", "Entzündungshemmung")
-            ])
-        elif alter >= 4:
-            meds.append(("Salbutamol", "1,25 mg vernebelt", "Kinderdosis"))
-            meds.append(("Prednisolon", "100 mg rektal", ""))
-        else:
-            meds.append(("Adrenalin", "2 mg + 2 ml NaCl vernebelt", "Kleinkind"))
-            meds.append(("Prednisolon", "100 mg rektal", ""))
+        meds.append(("Glukose", "bis 16 g i.v.", "Langsam i.v. / oral bei wachem Patienten"))
 
     return meds
 
