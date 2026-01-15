@@ -72,7 +72,8 @@ with st.container():
                 "Abdominelle Schmerzen / Koliken",
                 "Übelkeit / Erbrechen",
                 "Instabile Bradykardie",
-                "Benzodiazepin-Intoxikation"
+                "Benzodiazepin-Intoxikation",
+                "Opiat-Intoxikation"
             ]
         )
 
@@ -102,10 +103,7 @@ with st.container():
             schmerzskala = st.slider("Schmerzskala (1–10)", 1, 10, 5)
 
         if erkrankung == "Instabile Bradykardie":
-            asystolie_gefahr = st.radio(
-                "Gefahr einer Asystolie?",
-                ["Ja", "Nein"]
-            )
+            asystolie_gefahr = st.radio("Gefahr einer Asystolie?", ["Ja", "Nein"])
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -113,13 +111,17 @@ with st.container():
 def berechne():
     meds = []
 
+    # ---------- OPIAT-INTOXIKATION ----------
+    if erkrankung == "Opiat-Intoxikation":
+        meds.append((
+            "Naloxon",
+            "0,4 mg i.v.",
+            "0,4 mg auf 10 ml NaCl aufziehen, langsam titrieren"
+        ))
+
     # ---------- BENZODIAZEPIN-INTOXIKATION ----------
     if erkrankung == "Benzodiazepin-Intoxikation":
-        meds.append((
-            "Flumazenil",
-            "0,5 mg i.v.",
-            "Langsam i.v. applizieren"
-        ))
+        meds.append(("Flumazenil", "0,5 mg i.v.", "Langsam i.v. applizieren"))
 
     # ---------- INSTABILE BRADYKARDIE ----------
     if erkrankung == "Instabile Bradykardie":
@@ -127,14 +129,10 @@ def berechne():
             meds.append((
                 "Adrenalin-Infusion",
                 "1 mg Adrenalin in 500 ml Jonosteril",
-                "Fließgeschwindigkeit: 1 Tropfen pro Sekunde"
+                "Fließgeschwindigkeit: 1 Tropfen / Sekunde"
             ))
         else:
-            meds.append((
-                "Atropin",
-                "0,5 mg i.v.",
-                "Wiederholbar bis max. 3 mg Gesamtmenge"
-            ))
+            meds.append(("Atropin", "0,5 mg i.v.", "Wiederholbar bis max. 3 mg"))
 
     # ---------- ÜBELKEIT / ERBRECHEN ----------
     if erkrankung == "Übelkeit / Erbrechen":
@@ -153,11 +151,11 @@ def berechne():
     # ---------- HYPERTENSIVER NOTFALL ----------
     if erkrankung == "Hypertensiver Notfall" and blutdruck:
         ziel = int(blutdruck * 0.8)
-        meds.append(("Urapidil", "5–15 mg langsam i.v.", f"Ziel-Sys ca. {ziel} mmHg"))
+        meds.append(("Urapidil", "5–15 mg langsam i.v.", f"Ziel-Sys ≈ {ziel} mmHg"))
 
     # ---------- KARDIALES LUNGENÖDEM ----------
     if erkrankung == "Kardiales Lungenödem" and blutdruck:
-        meds.append(("Furosemid", "20 mg i.v.", "Langsam i.v."))
+        meds.append(("Furosemid", "20 mg i.v.", ""))
         if blutdruck > 120:
             meds.append(("Nitro", "0,4–0,8 mg sublingual", "RR > 120 mmHg"))
 
@@ -167,15 +165,15 @@ def berechne():
             meds.append(("Midazolam", f"{0.05 * gewicht:.2f} mg i.v.", "0,05 mg/kg KG"))
         else:
             if gewicht <= 10:
-                meds.append(("Midazolam", "2,5 mg (0,5 ml)", "Kein Zugang"))
+                meds.append(("Midazolam", "2,5 mg (0,5 ml)", ""))
             elif gewicht <= 20:
-                meds.append(("Midazolam", "5 mg (1 ml)", "Kein Zugang"))
+                meds.append(("Midazolam", "5 mg (1 ml)", ""))
             else:
-                meds.append(("Midazolam", "10 mg (2 ml)", "Kein Zugang"))
+                meds.append(("Midazolam", "10 mg (2 ml)", ""))
 
     # ---------- HYPOGLYKÄMIE ----------
     if erkrankung == "Hypoglykämie":
-        meds.append(("Glukose", "bis 16 g i.v.", "Langsam i.v. / oral bei wachem Patienten"))
+        meds.append(("Glukose", "bis 16 g i.v.", "Langsam i.v. / oral bei Wachheit"))
 
     return meds
 
