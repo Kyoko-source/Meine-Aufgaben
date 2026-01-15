@@ -1,6 +1,7 @@
 import streamlit as st
+import math
 
-# ================== GRUNDEINSTELLUNGEN ==================
+# ================== SEITENEINSTELLUNGEN ==================
 st.set_page_config(
     page_title="💊 Medikamentendosierung – Schulungszwecke",
     page_icon="💊",
@@ -36,37 +37,36 @@ body { background-color: #f2f6fa; }
 </style>
 """, unsafe_allow_html=True)
 
-# ================== SOP-DATEN ==================
-if "sop" not in st.session_state:
-    st.session_state.sop = {
+# ================== SOP TEXTDATEN (NUR ANZEIGE) ==================
+if "sop_text" not in st.session_state:
+    st.session_state.sop_text = {
         "Anaphylaxie": {
-            "Adrenalin": "0,15 / 0,3 / 0,5 mg je nach Alter"
+            "Adrenalin": "0,15 mg (<6 J) | 0,3 mg (6–12 J) | 0,5 mg ≥12 J"
         },
         "Asthma/COPD": {
             "Salbutamol": "altersabhängig vernebeln",
-            "Ipratropiumbromid": "500 µg vernebeln (>12 J)",
-            "Prednisolon": "100 mg i.v./rektal"
+            "Ipratropiumbromid": "500 µg vernebelt (>12 J)",
+            "Prednisolon": "100 mg i.v. / rektal"
         },
         "Hypoglykämie": {
-            "Glukose": "bis 16 g i.v. langsam / oral möglich"
+            "Glukose": "bis 16 g i.v. langsam / oral bei Wachheit"
         },
         "Krampfanfall": {
-            "Midazolam": "0,05 mg/kg i.v. oder altersabhängig"
+            "Midazolam": "0,05 mg/kg i.v. oder alters-/gewichtsabhängig"
         },
         "Schlaganfall": {
             "Jonosteril": "RR <120 mmHg",
-            "Urapidil": "5–15 mg langsam i.v."
+            "Urapidil": "5–15 mg langsam i.v. bei RR >220"
         },
         "Kardiales Lungenödem": {
             "Nitro": "0,4–0,8 mg sublingual",
             "Furosemid": "20 mg i.v."
         },
         "Hypertensiver Notfall": {
-            "Urapidil": "5–15 mg langsam i.v."
+            "Urapidil": "5–15 mg langsam i.v., max. 20% RR-Senkung"
         },
         "Starke Schmerzen bei Trauma": {
             "Paracetamol": "15 mg/kg oder 1 g",
-            "Midazolam": "1–2 mg alters-/gewichtsabhängig",
             "Esketamin": "0,125 mg/kg",
             "Fentanyl": "0,05 mg alle 4 min, max. 2 µg/kg"
         },
@@ -76,12 +76,12 @@ if "sop" not in st.session_state:
             "Morphin": "3 mg i.v. bei AF <10"
         },
         "Abdominelle Schmerzen / Koliken": {
-            "Paracetamol": "15 mg/kg oder 1 g",
+            "Paracetamol": "Schmerzskala 3–5",
             "Butylscopolamin": "0,3 mg/kg max. 40 mg",
-            "Fentanyl": "0,05 mg, max. 2 µg/kg"
+            "Fentanyl": "bei anhaltenden Schmerzen"
         },
         "Übelkeit / Erbrechen": {
-            "Ondansetron": "4 mg i.v.",
+            "Ondansetron": "4 mg i.v. (>60 J)",
             "Dimenhydrinat": "31 mg i.v. + 31 mg Infusion"
         },
         "Instabile Bradykardie": {
@@ -103,35 +103,37 @@ if "sop" not in st.session_state:
 st.markdown("<h1 class='header'>💊 Medikamentendosierung – Schulungszwecke</h1>", unsafe_allow_html=True)
 st.warning("⚠️ Ausschließlich für Schulungs- und Ausbildungszwecke – keine reale Anwendung!")
 
+schulungsmodus = st.toggle("🎓 Schulungsmodus (Erklärungen anzeigen)", value=True)
+
 # ================== ADMIN MODUS ==================
 with st.expander("🛠 SOP Anpassung (Admin-Modus)"):
     st.markdown("<div class='admin'>", unsafe_allow_html=True)
-    passwort = st.text_input("🔐 Admin-Passwort", type="password")
+    pw = st.text_input("🔐 Passwort", type="password")
 
-    if passwort == ADMIN_PASSWORT:
-        st.success("Zugriff gewährt")
+    if pw == ADMIN_PASSWORT:
+        st.success("Admin-Zugriff aktiv")
 
-        for erkrankung, medikamente in st.session_state.sop.items():
-            st.subheader(erkrankung)
-            for med, dosis in medikamente.items():
-                new_dosis = st.text_input(
+        for erk, meds in st.session_state.sop_text.items():
+            st.subheader(erk)
+            for med, dosis in meds.items():
+                new_val = st.text_input(
                     f"{med} – Dosierung",
                     value=dosis,
-                    key=f"{erkrankung}_{med}"
+                    key=f"{erk}_{med}"
                 )
-                st.session_state.sop[erkrankung][med] = new_dosis
+                st.session_state.sop_text[erk][med] = new_val
             st.divider()
 
-    elif passwort != "":
+    elif pw != "":
         st.error("Falsches Passwort")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ================== ANZEIGE SOP (SCHULUNG) ==================
-st.subheader("📋 Aktueller SOP-Stand (Schulung)")
-for erkrankung, medikamente in st.session_state.sop.items():
-    with st.expander(erkrankung):
-        for med, dosis in medikamente.items():
+# ================== SOP ANZEIGE (SCHULUNG) ==================
+st.subheader("📘 Aktueller SOP-Stand (Anzeige)")
+for erk, meds in st.session_state.sop_text.items():
+    with st.expander(erk):
+        for med, dosis in meds.items():
             st.markdown(f"**{med}:** {dosis}")
 
-st.caption("Rettungsdienst – Schulungssimulation | Admin-Modus aktivierbar")
+st.caption("Rettungsdienst – Schulungssimulation | Rechner unverändert | SOP-Editor separat")
