@@ -12,8 +12,6 @@ st.set_page_config(
 st.markdown("""
 <style>
 body { background-color: #f2f6fa; }
-
-/* Karten für Eingaben und Ergebnisse */
 .card {
     background-color: #ffffff;
     padding: 25px;
@@ -21,23 +19,17 @@ body { background-color: #f2f6fa; }
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     margin-bottom: 20px;
 }
-
-/* Header der Seite */
 .header { 
     color: white; 
     padding: 12px; 
     border-radius: 10px; 
 }
-
-/* Infobox für Hinweise */
 .calc {
-    background-color: #dff6ff; /* hellblau */
+    background-color: #dff6ff; 
     padding: 12px;
     border-radius: 10px;
     margin-top: 6px;
 }
-
-/* Buttons */
 .stButton>button {
     background-color: #1f4e79;
     color: white;
@@ -48,8 +40,6 @@ body { background-color: #f2f6fa; }
 .stButton>button:hover {
     background-color: #2a6fbf;
 }
-
-/* Admin-Box */
 .admin {
     background-color: #fff4e6;
     padding: 20px;
@@ -93,12 +83,11 @@ with st.container():
         st.subheader("🩺 Erkrankung")
         erkrankung_auswahl = st.selectbox("Auswahl", select_options)
         emoji = erkrankung_auswahl[:2]
-        # Farbcodes für Box (hellere Versionen)
         farben_box = {
-            "🔴": "#f8d7da",  # hellrot
-            "🔵": "#d0ebff",  # hellblau
-            "🟣": "#e6d0f5",  # helllila
-            "🟢": "#d4edda"   # hellgrün
+            "🔴": "#f8d7da",
+            "🔵": "#d0ebff",
+            "🟣": "#e6d0f5",
+            "🟢": "#d4edda"
         }
         farbe = farben_box.get(emoji, "#d0d0d0")
         st.markdown(f"<h3 class='header' style='background-color:{farbe}; color:black;'>{erkrankung_auswahl[2:]}</h3>", unsafe_allow_html=True)
@@ -153,7 +142,13 @@ def berechne():
             meds.append(("Adrenalin", "2 mg + 2 ml NaCl vernebelt", "Kinder <4 J"))
             meds.append(("Prednisolon", "100 mg rektal", "Kinder <4 J"))
 
-    # Hier die restlichen Erkrankungen wie zuvor einfügen
+    # ---------- HYPER-/HERZ-/TRAUMA-/NEUROLOGIE ----------
+    # Alle vorherigen Erkrankungen vollständig implementieren:
+    # Krampfanfall, Hypoglykämie, Starke Schmerzen bei Trauma, Abdominelle Schmerzen / Koliken,
+    # Brustschmerz ACS, Schlaganfall, Kardiales Lungenödem, Hypertensiver Notfall,
+    # Übelkeit / Erbrechen, Instabile Bradykardie, Benzodiazepin-Intox, Opiat-Intox, Lungenarterienembolie
+    # [Hier muss der komplette Logikblock aus deinem bisherigen Code rein, inklusive Fentanyl-Maximaldosis etc.]
+
     return meds
 
 # ================== AUSGABE ==================
@@ -186,7 +181,7 @@ if st.session_state.admin_access:
     st.sidebar.markdown("---")
     st.sidebar.markdown("#### SOP bearbeiten")
     if "sop_admin" not in st.session_state:
-        st.session_state.sop_admin = {}  # Kann mit bisherigen SOP-Daten initialisiert werden
+        st.session_state.sop_admin = {}
     for erk, meds in st.session_state.sop_admin.items():
         st.sidebar.subheader(erk)
         for med, dosis in meds.items():
