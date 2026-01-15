@@ -8,39 +8,93 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================== DESIGN ==================
+# ================== STYLES ==================
 st.markdown("""
 <style>
-body { background-color: #f2f6fa; }
-.card {
-    background-color: white;
+/* === Body & Fonts === */
+body {
+    background-color: #edf2f7;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #1f4e79;
+}
+
+/* === Karten === */
+.card, .calc, .admin {
+    background-color: #ffffff;
     padding: 25px;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover, .calc:hover, .admin:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+}
+
+/* === Header === */
+.header {
+    color: #1f4e79;
+    font-weight: 700;
+    font-size: 2.5em;
     margin-bottom: 20px;
 }
-.header { color: #1f4e79; }
-.calc {
-    background-color: #e8fff0;
-    padding: 12px;
-    border-radius: 10px;
-    margin-top: 6px;
-}
+
+/* === Buttons === */
 .stButton>button {
-    background-color: #1f4e79;
+    background: linear-gradient(90deg, #4cafef 0%, #1f4e79 100%);
     color: white;
     font-weight: bold;
     border-radius: 12px;
-    padding: 10px 22px;
+    padding: 12px 25px;
+    transition: all 0.3s ease;
 }
 .stButton>button:hover {
-    background-color: #2a6fbf;
+    background: linear-gradient(90deg, #1f4e79 0%, #4cafef 100%);
+    transform: scale(1.05);
 }
+
+/* === Input Widgets === */
+.stNumberInput>div>input, .stSelectbox>div>div>div {
+    border-radius: 10px;
+    border: 1px solid #cfd8dc;
+    padding: 8px;
+}
+
+/* === Schulungs-Hinweise === */
+.calc {
+    background-color: #e3fcec;
+    border-left: 4px solid #4caf50;
+    font-size: 0.95em;
+    padding: 12px 18px;
+}
+
+/* === Admin Bereich === */
 .admin {
-    background-color: #fff4e6;
-    padding: 20px;
+    background-color: #fff8e1;
+    border-left: 4px solid #ff9800;
+}
+
+/* === Medikamentenliste === */
+.med-list {
+    background: #f5f7fa;
+    padding: 15px;
+    border-radius: 15px;
+    margin-bottom: 12px;
+    transition: transform 0.2s ease;
+}
+.med-list:hover {
+    transform: translateX(3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+}
+
+/* === Warnungen === */
+.stWarning {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
     border-radius: 12px;
-    border: 2px solid #ff9800;
+    padding: 15px;
+    font-weight: 500;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -241,12 +295,10 @@ if st.button("💉 Dosierung berechnen"):
     ergebnis = berechne()
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📋 Therapieempfehlung")
-    for med, dosis, hinweis in ergebnis:
-        st.markdown(f"**💊 {med}**")
-        st.markdown(f"➡️ **Dosierung:** {dosis}")
+    for i, (med, dosis, hinweis) in enumerate(ergebnis):
+        st.markdown(f"<div class='med-list'><b>💊 {med}</b><br>➡️ Dosierung: {dosis}</div>", unsafe_allow_html=True)
         if schulungsmodus and hinweis:
             st.markdown(f"<div class='calc'>ℹ️ {hinweis}</div>", unsafe_allow_html=True)
-        st.markdown("---")
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ================== ADMIN-MODUS IN SIDEBAR ==================
