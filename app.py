@@ -12,20 +12,32 @@ st.set_page_config(
 st.markdown("""
 <style>
 body { background-color: #f2f6fa; }
+
+/* Karten für Eingaben und Ergebnisse */
 .card {
-    background-color: white;
+    background-color: #ffffff;
     padding: 25px;
     border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     margin-bottom: 20px;
 }
-.header { color: white; padding: 12px; border-radius: 10px; }
+
+/* Header der Seite */
+.header { 
+    color: white; 
+    padding: 12px; 
+    border-radius: 10px; 
+}
+
+/* Infobox für Hinweise */
 .calc {
-    background-color: #e8fff0;
+    background-color: #dff6ff; /* hellblau */
     padding: 12px;
     border-radius: 10px;
     margin-top: 6px;
 }
+
+/* Buttons */
 .stButton>button {
     background-color: #1f4e79;
     color: white;
@@ -36,6 +48,8 @@ body { background-color: #f2f6fa; }
 .stButton>button:hover {
     background-color: #2a6fbf;
 }
+
+/* Admin-Box */
 .admin {
     background-color: #fff4e6;
     padding: 20px;
@@ -46,7 +60,7 @@ body { background-color: #f2f6fa; }
 """, unsafe_allow_html=True)
 
 # ================== HEADER ==================
-st.markdown("<h1 class='header' style='background-color:#1f4e79'>💊 Medikamentendosierung – Schulungszwecke</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='header' style='background-color:#4da6ff'>💊 Medikamentendosierung – Schulungszwecke</h1>", unsafe_allow_html=True)
 st.warning("⚠️ Ausschließlich für Schulungs- und Ausbildungszwecke – keine reale Anwendung!")
 
 schulungsmodus = st.toggle("🎓 Schulungsmodus (Erklärungen anzeigen)", value=True)
@@ -60,7 +74,6 @@ farbkategorien = {
                                      "Opiat-Intoxikation", "Lungenarterienembolie", "Übelkeit / Erbrechen"]
 }
 
-# Flache Liste für selectbox
 select_options = []
 for cat, liste in farbkategorien.items():
     for e in liste:
@@ -79,20 +92,15 @@ with st.container():
     with col2:
         st.subheader("🩺 Erkrankung")
         erkrankung_auswahl = st.selectbox("Auswahl", select_options)
-        # Farbe bestimmen
         emoji = erkrankung_auswahl[:2]
-        farbe = "#1f4e79"  # Default
+        farbe = "#1f4e79"
         if emoji == "🔴": farbe = "#e74c3c"
         elif emoji == "🔵": farbe = "#3498db"
         elif emoji == "🟣": farbe = "#9b59b6"
         elif emoji == "🟢": farbe = "#2ecc71"
-        # Header farbig
         st.markdown(f"<h3 class='header' style='background-color:{farbe}'>{erkrankung_auswahl[2:]}</h3>", unsafe_allow_html=True)
-
-        # reine Erkrankung
         erkrankung = erkrankung_auswahl[2:]
 
-        # Zusatz-Eingaben
         blutdruck = None
         zugang = None
         atemfrequenz = None
@@ -142,10 +150,7 @@ def berechne():
             meds.append(("Adrenalin", "2 mg + 2 ml NaCl vernebelt", "Kinder <4 J"))
             meds.append(("Prednisolon", "100 mg rektal", "Kinder <4 J"))
 
-    # Weitere Erkrankungen ... (hier bleibt alles wie zuvor, siehe vorherigen Code)
-    # Du kannst den vorherigen Code für die restlichen Erkrankungen hier einfügen
-    # Krampfanfall, Hypoglykämie, Trauma, ACS, Abdomen, Übelkeit, Bradykardie, Intoxikation, Opiate, LAE
-
+    # Weitere Erkrankungen hier einfügen wie zuvor (Krampfanfall, Hypoglykämie, Trauma etc.)
     return meds
 
 # ================== AUSGABE ==================
@@ -178,8 +183,7 @@ if st.session_state.admin_access:
     st.sidebar.markdown("---")
     st.sidebar.markdown("#### SOP bearbeiten")
     if "sop_admin" not in st.session_state:
-        st.session_state.sop_admin = {}  # Kann mit Daten aus vorherigem Code initialisiert werden
-    # SOP-Bearbeitung
+        st.session_state.sop_admin = {}  # Kann mit bisherigen SOP-Daten initialisiert werden
     for erk, meds in st.session_state.sop_admin.items():
         st.sidebar.subheader(erk)
         for med, dosis in meds.items():
