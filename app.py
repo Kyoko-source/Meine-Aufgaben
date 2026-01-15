@@ -249,41 +249,44 @@ if st.button("💉 Dosierung berechnen"):
         st.markdown("---")
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ================== ADMIN BUTTON ==================
-if st.button("🛠 SOP Anpassung (Admin-Modus)"):
-    with st.expander("Admin-Modus"):
-        st.markdown("<div class='admin'>", unsafe_allow_html=True)
-        pw = st.text_input("🔐 Passwort", type="password")
-        if pw == "MediDos":
-            st.success("Admin-Zugriff aktiv")
-            # SOP für Admin (editable)
-            if "sop_admin" not in st.session_state:
-                st.session_state.sop_admin = {
-                    "Anaphylaxie": {"Adrenalin": "0,15 mg (<6 J) | 0,3 mg (6–12 J) | 0,5 mg ≥12 J"},
-                    "Asthma/COPD": {"Salbutamol": "altersabhängig", "Ipratropiumbromid": "500 µg (>12 J)", "Prednisolon": "100 mg i.v./rektal"},
-                    "Hypoglykämie": {"Glukose": "bis 16 g i.v. / oral"},
-                    "Krampfanfall": {"Midazolam": "0,05 mg/kg"},
-                    "Schlaganfall": {"Jonosteril": "RR <120 mmHg", "Urapidil": "5–15 mg i.v."},
-                    "Kardiales Lungenödem": {"Nitro": "0,4–0,8 mg sublingual", "Furosemid": "20 mg i.v."},
-                    "Hypertensiver Notfall": {"Urapidil": "5–15 mg i.v."},
-                    "Starke Schmerzen bei Trauma": {"Paracetamol": "15 mg/kg oder 1 g", "Esketamin": "0,125 mg/kg", "Fentanyl": "0,05 mg alle 4 min, max. 2 µg/kg"},
-                    "Brustschmerz ACS": {"ASS": "250 mg i.v.", "Heparin": "5000 I.E. i.v.", "Morphin": "3 mg i.v."},
-                    "Abdominelle Schmerzen / Koliken": {"Paracetamol": "15 mg/kg oder 1 g", "Butylscopolamin": "0,3 mg/kg max.40 mg", "Fentanyl": "0,05 mg, max. 2 µg/kg"},
-                    "Übelkeit / Erbrechen": {"Ondansetron": "4 mg i.v.", "Dimenhydrinat": "31 mg i.v. + 31 mg Infusion"},
-                    "Instabile Bradykardie": {"Adrenalin": "1 mg in 500 ml Jonosteril", "Atropin": "0,5 mg i.v. bis max. 3 mg"},
-                    "Benzodiazepin-Intoxikation": {"Flumazenil": "0,5 mg i.v."},
-                    "Opiat-Intoxikation": {"Naloxon": "0,4 mg i.v. auf 10 ml"},
-                    "Lungenarterienembolie": {"Heparin": "5000 I.E. i.v."}
-                }
-            # SOP bearbeiten
-            for erk, meds in st.session_state.sop_admin.items():
-                st.subheader(erk)
-                for med, dosis in meds.items():
-                    new_val = st.text_input(f"{med} – Dosierung", value=dosis, key=f"{erk}_{med}")
-                    st.session_state.sop_admin[erk][med] = new_val
-                st.divider()
-        elif pw != "":
-            st.error("Falsches Passwort")
-        st.markdown("</div>", unsafe_allow_html=True)
+# ================== ADMIN-MODUS IN SIDEBAR ==================
+st.sidebar.markdown("### 🛠 Admin-Modus – SOP Anpassung")
+if "admin_access" not in st.session_state:
+    st.session_state.admin_access = False
+
+if not st.session_state.admin_access:
+    pw = st.sidebar.text_input("🔐 Passwort eingeben", type="password")
+    if pw == "MediDos":
+        st.session_state.admin_access = True
+        st.sidebar.success("Admin-Zugriff aktiviert")
+    elif pw != "":
+        st.sidebar.error("Falsches Passwort")
+
+if st.session_state.admin_access:
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("#### SOP bearbeiten")
+    if "sop_admin" not in st.session_state:
+        st.session_state.sop_admin = {
+            "Anaphylaxie": {"Adrenalin": "0,15 mg (<6 J) | 0,3 mg (6–12 J) | 0,5 mg ≥12 J"},
+            "Asthma/COPD": {"Salbutamol": "altersabhängig", "Ipratropiumbromid": "500 µg (>12 J)", "Prednisolon": "100 mg i.v./rektal"},
+            "Hypoglykämie": {"Glukose": "bis 16 g i.v. / oral"},
+            "Krampfanfall": {"Midazolam": "0,05 mg/kg"},
+            "Schlaganfall": {"Jonosteril": "RR <120 mmHg", "Urapidil": "5–15 mg i.v."},
+            "Kardiales Lungenödem": {"Nitro": "0,4–0,8 mg sublingual", "Furosemid": "20 mg i.v."},
+            "Hypertensiver Notfall": {"Urapidil": "5–15 mg i.v."},
+            "Starke Schmerzen bei Trauma": {"Paracetamol": "15 mg/kg oder 1 g", "Esketamin": "0,125 mg/kg", "Fentanyl": "0,05 mg alle 4 min, max. 2 µg/kg"},
+            "Brustschmerz ACS": {"ASS": "250 mg i.v.", "Heparin": "5000 I.E. i.v.", "Morphin": "3 mg i.v."},
+            "Abdominelle Schmerzen / Koliken": {"Paracetamol": "15 mg/kg oder 1 g", "Butylscopolamin": "0,3 mg/kg max.40 mg", "Fentanyl": "0,05 mg, max. 2 µg/kg"},
+            "Übelkeit / Erbrechen": {"Ondansetron": "4 mg i.v.", "Dimenhydrinat": "31 mg i.v. + 31 mg Infusion"},
+            "Instabile Bradykardie": {"Adrenalin": "1 mg in 500 ml Jonosteril", "Atropin": "0,5 mg i.v. bis max. 3 mg"},
+            "Benzodiazepin-Intoxikation": {"Flumazenil": "0,5 mg i.v."},
+            "Opiat-Intoxikation": {"Naloxon": "0,4 mg i.v. auf 10 ml"},
+            "Lungenarterienembolie": {"Heparin": "5000 I.E. i.v."}
+        }
+    for erk, meds in st.session_state.sop_admin.items():
+        st.sidebar.subheader(erk)
+        for med, dosis in meds.items():
+            new_val = st.sidebar.text_input(f"{med} – Dosierung", value=dosis, key=f"{erk}_{med}")
+            st.session_state.sop_admin[erk][med] = new_val
 
 st.caption("Rettungsdienst – Schulungssimulation | Keine Haftung")
