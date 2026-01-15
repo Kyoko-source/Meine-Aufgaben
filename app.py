@@ -52,7 +52,7 @@ with st.container():
 
     with col1:
         st.subheader("👤 Patient")
-        alter = st.number_input("Alter (Jahre)", 0, 120, 45)
+        alter = st.number_input("Alter (Jahre)", 0, 120, 50)
         gewicht = st.number_input("Gewicht (kg)", 1.0, 200.0, 80.0)
 
     with col2:
@@ -73,13 +73,13 @@ with st.container():
                 "Übelkeit / Erbrechen",
                 "Instabile Bradykardie",
                 "Benzodiazepin-Intoxikation",
-                "Opiat-Intoxikation"
+                "Opiat-Intoxikation",
+                "Lungenarterienembolie"
             ]
         )
 
         blutdruck = None
         zugang = None
-        trauma_wahl = None
         atemfrequenz = None
         schmerzskala = None
         asystolie_gefahr = None
@@ -89,12 +89,6 @@ with st.container():
 
         if erkrankung == "Krampfanfall":
             zugang = st.radio("Zugang vorhanden?", ["Ja", "Nein"])
-
-        if erkrankung == "Starke Schmerzen bei Trauma":
-            trauma_wahl = st.radio(
-                "Therapie nach Paracetamol",
-                ["Paracetamol + Esketamin + Midazolam", "Paracetamol + Fentanyl"]
-            )
 
         if erkrankung == "Brustschmerz ACS":
             atemfrequenz = st.number_input("Atemfrequenz (/min)", 0, 60, 16)
@@ -110,6 +104,14 @@ with st.container():
 # ================== BERECHNUNG ==================
 def berechne():
     meds = []
+
+    # ---------- LUNGENARTERIENEMBOLIE ----------
+    if erkrankung == "Lungenarterienembolie":
+        meds.append((
+            "Heparin",
+            "5000 I.E. i.v.",
+            "Antikoagulation bei Verdacht auf LAE"
+        ))
 
     # ---------- OPIAT-INTOXIKATION ----------
     if erkrankung == "Opiat-Intoxikation":
@@ -129,7 +131,7 @@ def berechne():
             meds.append((
                 "Adrenalin-Infusion",
                 "1 mg Adrenalin in 500 ml Jonosteril",
-                "Fließgeschwindigkeit: 1 Tropfen / Sekunde"
+                "1 Tropfen pro Sekunde"
             ))
         else:
             meds.append(("Atropin", "0,5 mg i.v.", "Wiederholbar bis max. 3 mg"))
@@ -173,7 +175,7 @@ def berechne():
 
     # ---------- HYPOGLYKÄMIE ----------
     if erkrankung == "Hypoglykämie":
-        meds.append(("Glukose", "bis 16 g i.v.", "Langsam i.v. / oral bei Wachheit"))
+        meds.append(("Glukose", "bis 16 g i.v.", "Langsam i.v. / oral bei wachem Patienten"))
 
     return meds
 
