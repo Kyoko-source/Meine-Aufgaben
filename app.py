@@ -1,48 +1,44 @@
 import streamlit as st
 import math
 
-# ---------- Seiteneinstellungen ----------
+# ================== SEITENEINSTELLUNGEN ==================
 st.set_page_config(
     page_title="💊 Medikamentendosierung – Schulungszwecke",
     page_icon="💊",
     layout="wide"
 )
 
-# ---------- Design & CSS ----------
+# ================== DESIGN ==================
 st.markdown("""
 <style>
-body {background-color: #f0f4f8;}
-.box {
-    background-color: #ffffff;
+body { background-color: #f2f6fa; }
+.card {
+    background-color: white;
     padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0px 5px 15px rgba(0,0,0,0.1);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     margin-bottom: 20px;
 }
-.input-box {
-    background-color: #e8f0fe;
-    padding: 20px;
-    border-radius: 12px;
-}
-.result-box {
-    background-color: #fff7e6;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0px 3px 8px rgba(0,0,0,0.05);
+.header {
+    color: #1f4e79;
 }
 .calc {
-    background-color: #e0ffe0;
+    background-color: #e8fff0;
     padding: 12px;
     border-radius: 10px;
-    margin-top: 5px;
+    margin-top: 6px;
 }
-h1, h2, h3 { color: #1f4e79; }
+.warn {
+    background-color: #fff3cd;
+    padding: 12px;
+    border-radius: 10px;
+}
 .stButton>button {
     background-color: #1f4e79;
     color: white;
     font-weight: bold;
-    border-radius: 10px;
-    padding: 10px 20px;
+    border-radius: 12px;
+    padding: 10px 22px;
 }
 .stButton>button:hover {
     background-color: #2a6fbf;
@@ -50,235 +46,151 @@ h1, h2, h3 { color: #1f4e79; }
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- Header ----------
-st.markdown("<h1>💊 Medikamentendosierung – Schulungszwecke</h1>", unsafe_allow_html=True)
-st.markdown("**Simulation & Ausbildung – Rettungsdienst**")
-st.warning(
-    "⚠️ Ausschließlich für Schulungs- und Ausbildungszwecke. "
-    "Keine Anwendung im Real- oder Einsatzbetrieb."
-)
+# ================== HEADER ==================
+st.markdown("<h1 class='header'>💊 Medikamentendosierung – Schulungszwecke</h1>", unsafe_allow_html=True)
+st.warning("⚠️ Ausschließlich für Schulungs- und Ausbildungszwecke – keine reale Anwendung.")
 
-# ---------- Schulungsmodus ----------
-schulungsmodus = st.toggle("🎓 Schulungsmodus aktivieren", value=True)
+schulungsmodus = st.toggle("🎓 Schulungsmodus (Rechenwege anzeigen)", value=True)
 
-# ---------- Eingabebereich ----------
+# ================== EINGABEN ==================
 with st.container():
-    st.markdown("<div class='box'>", unsafe_allow_html=True)
-    col1, col2 = st.columns([1, 1])
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
 
-    # ---- Patientendaten ----
     with col1:
-        st.markdown("<div class='input-box'>", unsafe_allow_html=True)
-        st.markdown("### ⚖️ Patientendaten")
-        alter = st.number_input("Alter des Patienten (Jahre)", min_value=0, max_value=120, step=1)
-        patientengruppe = st.radio("Patientengruppe", ["👶 Kind", "🧑 Erwachsener"], horizontal=True)
-        if patientengruppe == "👶 Kind":
-            gewicht = st.number_input("Gewicht (kg)", min_value=1.0, max_value=80.0, step=0.5)
-        else:
-            gewicht = st.number_input("Gewicht (optional, kg)", min_value=20.0, max_value=200.0, step=1.0)
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.subheader("👤 Patient")
+        alter = st.number_input("Alter (Jahre)", 0, 120, 30)
+        gewicht = st.number_input("Gewicht (kg)", 1.0, 200.0, 70.0)
 
-    # ---- Erkrankungsauswahl ----
     with col2:
-        st.markdown("<div class='input-box'>", unsafe_allow_html=True)
-        st.markdown("### 🩺 Erkrankung auswählen")
-        erkrankung = st.selectbox("Erkrankung", [
-            "Anaphylaxie",
-            "Asthma/COPD",
-            "Hypoglykämie",
-            "Krampfanfall",
-            "Schlaganfall",
-            "Kardiales Lungenödem",
-            "Hypertensiver Notfall",
-            "Starke Schmerzen bei Trauma",
-            "Brustschmerz ACS",
-            "Abdominelle Schmerzen / Koliken"
-        ])
+        st.subheader("🩺 Erkrankung")
+        erkrankung = st.selectbox(
+            "Auswahl",
+            [
+                "Anaphylaxie",
+                "Asthma/COPD",
+                "Hypoglykämie",
+                "Krampfanfall",
+                "Schlaganfall",
+                "Kardiales Lungenödem",
+                "Hypertensiver Notfall",
+                "Starke Schmerzen bei Trauma",
+                "Brustschmerz ACS",
+                "Abdominelle Schmerzen / Koliken",
+                "Übelkeit / Erbrechen"
+            ]
+        )
 
-        bewusstseinslage = None
-        zugang = None
         blutdruck = None
-        trauma_medikament = None
+        zugang = None
+        trauma_wahl = None
         atemfrequenz = None
         schmerzskala = None
 
-        if erkrankung == "Hypoglykämie":
-            bewusstseinslage = st.radio("Patientenbewusstsein", ["Ansprechbar (orale Gabe möglich)", "Bewusstseinsgestört (nur i.v.)"])
-        if erkrankung == "Krampfanfall":
-            zugang = st.radio("Zugang verfügbar?", ["Ja, Zugang vorhanden", "Nein, kein Zugang"])
         if erkrankung in ["Schlaganfall", "Kardiales Lungenödem", "Hypertensiver Notfall"]:
-            blutdruck = st.number_input("Systolischer Blutdruck (mmHg)", min_value=50, max_value=300, step=1)
+            blutdruck = st.number_input("Systolischer Blutdruck (mmHg)", 50, 300, 140)
+
+        if erkrankung == "Krampfanfall":
+            zugang = st.radio("Zugang vorhanden?", ["Ja", "Nein"])
+
         if erkrankung == "Starke Schmerzen bei Trauma":
-            trauma_medikament = st.radio("Analgetika nach Paracetamol auswählen", ["Esketamin", "Fentanyl"])
+            trauma_wahl = st.radio(
+                "Therapie nach Paracetamol",
+                ["Paracetamol + Esketamin + Midazolam", "Paracetamol + Fentanyl"]
+            )
+
         if erkrankung == "Brustschmerz ACS":
-            atemfrequenz = st.number_input("Atemfrequenz (pro Minute)", min_value=0, max_value=60, step=1)
+            atemfrequenz = st.number_input("Atemfrequenz (/min)", 0, 60, 16)
+
         if erkrankung == "Abdominelle Schmerzen / Koliken":
             schmerzskala = st.slider("Schmerzskala (1–10)", 1, 10, 5)
 
-        st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ---------- Berechnungslogik ----------
-def berechnung(alter, gewicht, erkrankung, bewusstseinslage=None, zugang=None, blutdruck=None, trauma_medikament=None, atemfrequenz=None, schmerzskala=None):
-    med_list = []
+# ================== BERECHNUNG ==================
+def berechne():
+    meds = []
 
-    # --- Anaphylaxie ---
-    if erkrankung == "Anaphylaxie":
-        if alter < 6:
-            dosis = 0.15
-        elif 6 <= alter < 12:
-            dosis = 0.3
+    # ---------- ÜBELKEIT / ERBRECHEN ----------
+    if erkrankung == "Übelkeit / Erbrechen":
+        if alter >= 60:
+            meds.append((
+                "Ondansetron",
+                "4 mg i.v.",
+                "Einmalig, ggf. 1× wiederholbar"
+            ))
         else:
-            dosis = 0.5
-        med_list.append(("Adrenalin", f"{dosis:.2f} mg i.m.", "Altersbasierte Dosierung (<6 J:0,15 mg | 6–12 J:0,3 mg | ≥12 J:0,5 mg)"))
+            meds.append((
+                "Dimenhydrinat",
+                "31 mg i.v.",
+                "Zusätzlich 31 mg in die Infusion geben"
+            ))
 
-    # --- Asthma/COPD ---
-    elif erkrankung == "Asthma/COPD":
-        if alter >= 12:
-            med_list.extend([
-                ("Salbutamol", "2,5 mg vernebelt", "Erwachsene Dosis"),
-                ("Prednisolon", "100 mg i.v.", "Erwachsene Dosis"),
-                ("Ipratropiumbromid", "500 µg vernebelt", "Erwachsene Dosis")
-            ])
-        elif 4 <= alter < 12:
-            med_list.extend([
-                ("Salbutamol", "1,25 mg vernebelt", "Kinderdosis"),
-                ("Prednisolon", "100 mg rektal", "Kinderdosis")
-            ])
-        else:
-            med_list.extend([
-                ("Adrenalin", "2 mg + 2 ml NaCl vernebelt", "Säuglingsdosis"),
-                ("Prednisolon", "100 mg rektal", "Säuglingsdosis")
-            ])
+    # ---------- BRUSTSCHMERZ ACS ----------
+    if erkrankung == "Brustschmerz ACS":
+        meds.append(("ASS", "250 mg i.v.", "Standardtherapie ACS"))
+        meds.append(("Heparin", "5000 I.E. i.v.", "Unfraktioniertes Heparin"))
+        if atemfrequenz is not None and atemfrequenz < 10:
+            meds.append(("Morphin", "3 mg i.v.", "Nur bei AF < 10/min"))
 
-    # --- Hypoglykämie ---
-    elif erkrankung == "Hypoglykämie":
-        if bewusstseinslage.startswith("Ansprechbar"):
-            med_list.append(("Glucose", "bis 16 g p.o. oder i.v.", "Patient ansprechbar → orale Gabe möglich, sonst langsam i.v."))
-        else:
-            med_list.append(("Glucose", "bis 16 g i.v.", "Bewusstseinsgestört → nur i.v., langsam applizieren"))
+    # ---------- HYPERTENSIVER NOTFALL ----------
+    if erkrankung == "Hypertensiver Notfall" and blutdruck:
+        ziel = int(blutdruck * 0.8)
+        meds.append(("Urapidil", "5–15 mg langsam i.v.", f"Ziel-Sys ca. {ziel} mmHg (−20 %)"))
 
-    # --- Krampfanfall ---
-    elif erkrankung == "Krampfanfall":
-        if zugang.startswith("Ja"):
-            dosis_mg = 0.05 * gewicht
-            med_list.append(("Midazolam", f"{dosis_mg:.2f} mg i.v. langsam", "0,05 mg/kg KG, langsam i.v. bei Zugang möglich"))
+    # ---------- KARDIALES LUNGENÖDEM ----------
+    if erkrankung == "Kardiales Lungenödem" and blutdruck:
+        meds.append(("Furosemid", "20 mg i.v.", "Langsam i.v."))
+        if blutdruck > 120:
+            meds.append(("Nitro", "0,4–0,8 mg sublingual", "Nur bei RR > 120 mmHg"))
+
+    # ---------- KRAMPFANFALL ----------
+    if erkrankung == "Krampfanfall":
+        if zugang == "Ja":
+            dosis = 0.05 * gewicht
+            meds.append(("Midazolam", f"{dosis:.2f} mg i.v.", "0,05 mg/kg KG langsam"))
         else:
             if gewicht <= 10:
-                med_list.append(("Midazolam", "2,5 mg = 0,5 ml", "Zugang nicht möglich, 0-10 kg"))
+                meds.append(("Midazolam", "2,5 mg (0,5 ml)", "Kein Zugang"))
             elif gewicht <= 20:
-                med_list.append(("Midazolam", "5 mg = 1 ml", "Zugang nicht möglich, 10-20 kg"))
+                meds.append(("Midazolam", "5 mg (1 ml)", "Kein Zugang"))
             else:
-                med_list.append(("Midazolam", "10 mg = 2 ml", "Zugang nicht möglich, >20 kg"))
+                meds.append(("Midazolam", "10 mg (2 ml)", "Kein Zugang"))
 
-    # --- Schlaganfall ---
-    elif erkrankung == "Schlaganfall":
-        if blutdruck < 120:
-            med_list.append(("Jonosteril", "Volumengabe nach Bedarf", "Blutdruck <120 mmHg → Volumengabe"))
-        elif blutdruck > 220:
-            med_list.append(("Urapidil", "5–15 mg i.v. langsam", "Blutdruck >220 mmHg → Urapidil langsam i.v."))
-        else:
-            med_list.append(("Keine akute medikamentöse Therapie", "–", "Blutdruck im Normbereich"))
+    # ---------- HYPOGLYKÄMIE ----------
+    if erkrankung == "Hypoglykämie":
+        meds.append(("Glukose", "bis 16 g i.v.", "Langsam i.v., alternativ oral bei Wachheit"))
 
-    # --- Kardiales Lungenödem ---
-    elif erkrankung == "Kardiales Lungenödem":
-        if blutdruck > 120:
-            med_list.extend([
-                ("Nitro", "0,4–0,8 mg sublingual", "Blutdruck >120 mmHg → Nitro unter die Zunge"),
-                ("Furosemid", "20 mg i.v.", "Immer langsam i.v. applizieren")
+    # ---------- ASTHMA / COPD ----------
+    if erkrankung == "Asthma/COPD":
+        if alter >= 12:
+            meds.extend([
+                ("Salbutamol", "2,5 mg vernebelt", "Bronchodilatator"),
+                ("Ipratropiumbromid", "500 µg vernebelt", "Zusatz"),
+                ("Prednisolon", "100 mg i.v.", "Entzündungshemmung")
             ])
+        elif alter >= 4:
+            meds.append(("Salbutamol", "1,25 mg vernebelt", "Kinderdosis"))
+            meds.append(("Prednisolon", "100 mg rektal", ""))
         else:
-            med_list.append(("Furosemid", "20 mg i.v.", "Blutdruck ≤120 mmHg → nur Furosemid i.v., langsam applizieren"))
+            meds.append(("Adrenalin", "2 mg + 2 ml NaCl vernebelt", "Kleinkind"))
+            meds.append(("Prednisolon", "100 mg rektal", ""))
 
-    # --- Hypertensiver Notfall ---
-    elif erkrankung == "Hypertensiver Notfall":
-        ziel_blutdruck = blutdruck * 0.8
-        med_list.append(("Urapidil", "5–15 mg i.v. langsam", f"Blutdruck darf maximal 20% gesenkt werden → Ziel: {ziel_blutdruck:.1f} mmHg"))
+    return meds
 
-    # --- Starke Schmerzen bei Trauma ---
-    elif erkrankung == "Starke Schmerzen bei Trauma":
-        if alter >= 12 or gewicht >= 30:
-            if gewicht < 50:
-                paracetamol_dosis = 15 * gewicht
-                med_list.append(("Paracetamol", f"{paracetamol_dosis:.1f} mg", "15 mg/kg KG"))
-            else:
-                med_list.append(("Paracetamol", "1 g", "Gewicht ≥50 kg"))
-
-            if trauma_medikament == "Esketamin" and gewicht > 30:
-                midazolam_dosis = 0
-                if alter > 60:
-                    midazolam_dosis = 1
-                elif gewicht > 50:
-                    midazolam_dosis = 2
-                elif gewicht > 30:
-                    midazolam_dosis = 1
-                if midazolam_dosis > 0:
-                    med_list.append(("Midazolam", f"{midazolam_dosis} mg", "Sedierung nach Gewicht/Alter"))
-
-                esk_dosis = 0.125 * gewicht
-                med_list.append(("Esketamin", f"{esk_dosis:.2f} mg", "0,125 mg/kg KG"))
-
-            elif trauma_medikament == "Fentanyl" and gewicht > 30:
-                dosis_einmal_mg = 0.05
-                dosis_einmal_ug = dosis_einmal_mg * 1000
-                max_total_ug = 2 * gewicht
-                max_gaben = math.floor(max_total_ug / dosis_einmal_ug)
-                med_list.append((
-                    "Fentanyl",
-                    f"{dosis_einmal_mg:.2f} mg i.v. alle 4 Min",
-                    f"Maximaldosis: {max_total_ug:.0f} µg → {max_gaben} Gaben möglich"
-                ))
-
-    # --- Brustschmerz ACS ---
-    elif erkrankung == "Brustschmerz ACS":
-        med_list.append(("ASS", "250 mg i.v.", "Standarddosis bei ACS"))
-        med_list.append(("Heparin", "5000 I.E.", "Standarddosis bei ACS"))
-        if atemfrequenz is not None and atemfrequenz < 10:
-            med_list.append(("Morphin", "3 mg i.v.", "Bei Atemfrequenz <10/min"))
-
-    # --- Abdominelle Schmerzen / Koliken ---
-    elif erkrankung == "Abdominelle Schmerzen / Koliken":
-        if schmerzskala is not None:
-            # Paracetamol 3-5
-            if 3 <= schmerzskala <= 5:
-                if gewicht < 50:
-                    paracetamol_dosis = 15 * gewicht
-                    med_list.append(("Paracetamol", f"{paracetamol_dosis:.1f} mg", "15 mg/kg KG"))
-                else:
-                    med_list.append(("Paracetamol", "1 g", "Gewicht ≥50 kg"))
-            # Butylscopolamin + Fentanyl 6-10
-            elif 6 <= schmerzskala <= 10:
-                butyl_dosis = 0.3 * gewicht
-                if butyl_dosis > 40:
-                    butyl_dosis = 40
-                med_list.append(("Butylscopolamin", f"{butyl_dosis:.1f} mg", "0,3 mg/kg KG, max 40 mg"))
-
-                if gewicht >= 30:
-                    dosis_einmal_mg = 0.05
-                    dosis_einmal_ug = dosis_einmal_mg * 1000
-                    max_total_ug = 2 * gewicht
-                    max_gaben = math.floor(max_total_ug / dosis_einmal_ug)
-                    med_list.append((
-                        "Fentanyl",
-                        f"{dosis_einmal_mg:.2f} mg i.v.",
-                        f"Maximaldosis: {max_total_ug:.0f} µg → {max_gaben} Gaben möglich"
-                    ))
-
-    return med_list
-
-# ---------- Button ----------
+# ================== AUSGABE ==================
 if st.button("💉 Dosierung berechnen"):
-    ergebnisse = berechnung(alter, gewicht, erkrankung, bewusstseinslage, zugang, blutdruck, trauma_medikament, atemfrequenz, schmerzskala)
+    ergebnis = berechne()
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("📋 Therapieempfehlung")
 
-    st.markdown("<div class='box'>", unsafe_allow_html=True)
-    st.markdown("<h2>📋 Ergebnis</h2>", unsafe_allow_html=True)
-    for med, dosis, hinweis in ergebnisse:
-        st.markdown(f"**💊 Medikament:** {med}")
-        st.markdown(f"**💉 Dosierung:** {dosis}")
-        if schulungsmodus:
-            st.markdown(f"<div class='calc'>**Hinweis:** {hinweis}</div>", unsafe_allow_html=True)
+    for med, dosis, hinweis in ergebnis:
+        st.markdown(f"**💊 {med}**")
+        st.markdown(f"➡️ **Dosierung:** {dosis}")
+        if schulungsmodus and hinweis:
+            st.markdown(f"<div class='calc'>ℹ️ {hinweis}</div>", unsafe_allow_html=True)
         st.markdown("---")
+
     st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown("---")
-st.caption("Schulungsanwendung | Keine medizinische Verantwortung")
+st.caption("Rettungsdienst – Schulungssimulation | Keine Haftung")
