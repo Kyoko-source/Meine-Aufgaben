@@ -13,19 +13,15 @@ st.markdown("""
 <style>
 body { background-color: #f2f6fa; }
 .card {
-    background-color: #ffffff;
+    background-color: white;
     padding: 25px;
     border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     margin-bottom: 20px;
 }
-.header { 
-    color: white; 
-    padding: 12px; 
-    border-radius: 10px; 
-}
+.header { color: #1f4e79; }
 .calc {
-    background-color: #dff6ff; 
+    background-color: #e8fff0;
     padding: 12px;
     border-radius: 10px;
     margin-top: 6px;
@@ -50,24 +46,10 @@ body { background-color: #f2f6fa; }
 """, unsafe_allow_html=True)
 
 # ================== HEADER ==================
-st.markdown("<h1 class='header' style='background-color:#4da6ff'>💊 Medikamentendosierung – Schulungszwecke</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='header'>💊 Medikamentendosierung – Schulungszwecke</h1>", unsafe_allow_html=True)
 st.warning("⚠️ Ausschließlich für Schulungs- und Ausbildungszwecke – keine reale Anwendung!")
 
 schulungsmodus = st.toggle("🎓 Schulungsmodus (Erklärungen anzeigen)", value=True)
-
-# ================== FARBKATEGORIEN ==================
-farbkategorien = {
-    "🔴 Herzkreislauf": ["Kardiales Lungenödem", "Hypertensiver Notfall", "Brustschmerz ACS", "Instabile Bradykardie"],
-    "🔵 Atemweg": ["Asthma/COPD", "Anaphylaxie"],
-    "🟣 Trauma/Schmerz": ["Starke Schmerzen bei Trauma", "Abdominelle Schmerzen / Koliken"],
-    "🟢 Neurologie/Intoxikation": ["Schlaganfall", "Krampfanfall", "Hypoglykämie", "Benzodiazepin-Intoxikation",
-                                     "Opiat-Intoxikation", "Lungenarterienembolie", "Übelkeit / Erbrechen"]
-}
-
-select_options = []
-for cat, liste in farbkategorien.items():
-    for e in liste:
-        select_options.append(f"{cat} {e}")
 
 # ================== EINGABEN ==================
 with st.container():
@@ -81,17 +63,26 @@ with st.container():
 
     with col2:
         st.subheader("🩺 Erkrankung")
-        erkrankung_auswahl = st.selectbox("Auswahl", select_options)
-        emoji = erkrankung_auswahl[:2]
-        farben_box = {
-            "🔴": "#f8d7da",
-            "🔵": "#d0ebff",
-            "🟣": "#e6d0f5",
-            "🟢": "#d4edda"
-        }
-        farbe = farben_box.get(emoji, "#d0d0d0")
-        st.markdown(f"<h3 class='header' style='background-color:{farbe}; color:black;'>{erkrankung_auswahl[2:]}</h3>", unsafe_allow_html=True)
-        erkrankung = erkrankung_auswahl[2:]
+        erkrankung = st.selectbox(
+            "Auswahl",
+            [
+                "Anaphylaxie",
+                "Asthma/COPD",
+                "Hypoglykämie",
+                "Krampfanfall",
+                "Schlaganfall",
+                "Kardiales Lungenödem",
+                "Hypertensiver Notfall",
+                "Starke Schmerzen bei Trauma",
+                "Brustschmerz ACS",
+                "Abdominelle Schmerzen / Koliken",
+                "Übelkeit / Erbrechen",
+                "Instabile Bradykardie",
+                "Benzodiazepin-Intoxikation",
+                "Opiat-Intoxikation",
+                "Lungenarterienembolie"
+            ]
+        )
 
         blutdruck = None
         zugang = None
@@ -142,12 +133,106 @@ def berechne():
             meds.append(("Adrenalin", "2 mg + 2 ml NaCl vernebelt", "Kinder <4 J"))
             meds.append(("Prednisolon", "100 mg rektal", "Kinder <4 J"))
 
-    # ---------- HYPER-/HERZ-/TRAUMA-/NEUROLOGIE ----------
-    # Alle vorherigen Erkrankungen vollständig implementieren:
-    # Krampfanfall, Hypoglykämie, Starke Schmerzen bei Trauma, Abdominelle Schmerzen / Koliken,
-    # Brustschmerz ACS, Schlaganfall, Kardiales Lungenödem, Hypertensiver Notfall,
-    # Übelkeit / Erbrechen, Instabile Bradykardie, Benzodiazepin-Intox, Opiat-Intox, Lungenarterienembolie
-    # [Hier muss der komplette Logikblock aus deinem bisherigen Code rein, inklusive Fentanyl-Maximaldosis etc.]
+    # ---------- HYPOGLYKÄMIE ----------
+    if erkrankung == "Hypoglykämie":
+        meds.append(("Glukose", "bis 16 g i.v.", "Langsam i.v. / oral bei wachem Patienten"))
+
+    # ---------- KRAMPFANFALL ----------
+    if erkrankung == "Krampfanfall":
+        if zugang == "Ja":
+            meds.append(("Midazolam", f"{0.05 * gewicht:.2f} mg i.v.", "0,05 mg/kg KG"))
+        else:
+            if gewicht <= 10:
+                meds.append(("Midazolam", "2,5 mg (0,5 ml)", ""))
+            elif gewicht <= 20:
+                meds.append(("Midazolam", "5 mg (1 ml)", ""))
+            else:
+                meds.append(("Midazolam", "10 mg (2 ml)", ""))
+
+    # ---------- SCHLAGANFALL ----------
+    if erkrankung == "Schlaganfall":
+        if blutdruck and blutdruck < 120:
+            meds.append(("Jonosteril", "", "RR <120 mmHg"))
+        elif blutdruck and blutdruck > 220:
+            meds.append(("Urapidil", "5–15 mg i.v.", "RR >220 mmHg"))
+
+    # ---------- KARDIALES LUNGENÖDEM ----------
+    if erkrankung == "Kardiales Lungenödem":
+        meds.append(("Furosemid", "20 mg i.v.", ""))
+        if blutdruck and blutdruck > 120:
+            meds.append(("Nitro", "0,4–0,8 mg sublingual", "RR >120 mmHg"))
+
+    # ---------- HYPERTENSIVER NOTFALL ----------
+    if erkrankung == "Hypertensiver Notfall" and blutdruck:
+        ziel = int(blutdruck * 0.8)
+        meds.append(("Urapidil", "5–15 mg langsam i.v.", f"Ziel-Sys ≈ {ziel} mmHg"))
+
+    # ---------- STARKER SCHMERZ / TRAUMA ----------
+    if erkrankung == "Starke Schmerzen bei Trauma":
+        if gewicht >= 30:
+            meds.append(("Paracetamol", f"{15*gewicht:.0f} mg i.v.", "15 mg/kg"))
+            mid_esket_fent = st.radio("Zusatzmedikation wählen:", ["Midazolam + Esketamin", "Fentanyl"])
+            if mid_esket_fent == "Midazolam + Esketamin":
+                if gewicht >= 30:
+                    meds.append(("Midazolam", "1 mg i.v.", "Gewicht >30 kg"))
+                    meds.append(("Esketamin", f"{0.125*gewicht:.2f} mg i.v.", "0,125 mg/kg"))
+            else:
+                dosis_einmal_mg = 0.05  # Fentanyl
+                dosis_einmal_ug = dosis_einmal_mg * 1000
+                max_total_ug = 2 * gewicht
+                max_gaben = math.floor(max_total_ug / dosis_einmal_ug)
+                meds.append(("Fentanyl", f"0,05 mg i.v. alle 4 min", f"Maximal {max_gaben} Gaben"))
+
+    # ---------- BRUSTSCHMERZ ACS ----------
+    if erkrankung == "Brustschmerz ACS":
+        meds.append(("ASS", "250 mg i.v.", ""))
+        meds.append(("Heparin", "5000 I.E. i.v.", ""))
+        if atemfrequenz is not None and atemfrequenz < 10:
+            meds.append(("Morphin", "3 mg i.v.", "AF < 10/min"))
+
+    # ---------- ABDOMINALE SCHMERZEN / KOLIKEN ----------
+    if erkrankung == "Abdominelle Schmerzen / Koliken":
+        if 3 <= schmerzskala <=5 and gewicht >= 30:
+            if gewicht > 50:
+                meds.append(("Paracetamol", "1 g i.v.", "Gewicht >50 kg"))
+            else:
+                meds.append(("Paracetamol", f"{15*gewicht:.0f} mg i.v.", "15 mg/kg"))
+        if 6 <= schmerzskala <=10:
+            dosis = 0.3*gewicht
+            if dosis > 40: dosis = 40
+            meds.append(("Butylscopolamin", f"{dosis:.2f} mg i.v.", "max. 40 mg"))
+            if gewicht >= 30:
+                dosis_einmal_mg = 0.05
+                dosis_einmal_ug = dosis_einmal_mg*1000
+                max_total_ug = 2*gewicht
+                max_gaben = math.floor(max_total_ug / dosis_einmal_ug)
+                meds.append(("Fentanyl", f"0,05 mg i.v.", f"Maximal {max_gaben} Gaben"))
+
+    # ---------- ÜBELKEIT / ERBRECHEN ----------
+    if erkrankung == "Übelkeit / Erbrechen":
+        if alter >= 60:
+            meds.append(("Ondansetron", "4 mg i.v.", "Einmalig"))
+        else:
+            meds.append(("Dimenhydrinat", "31 mg i.v.", "Zusätzlich 31 mg Infusion"))
+
+    # ---------- INSTABILE BRADYKARDIE ----------
+    if erkrankung == "Instabile Bradykardie":
+        if asystolie_gefahr == "Ja":
+            meds.append(("Adrenalin-Infusion", "1 mg in 500 ml Jonosteril", "1 Tropfen/Sekunde"))
+        else:
+            meds.append(("Atropin", "0,5 mg i.v.", "Bis max. 3 mg"))
+
+    # ---------- BENZODIAZEPIN-INTOXIKATION ----------
+    if erkrankung == "Benzodiazepin-Intoxikation":
+        meds.append(("Flumazenil", "0,5 mg i.v.", "Langsam i.v."))
+
+    # ---------- OPIAT-INTOXIKATION ----------
+    if erkrankung == "Opiat-Intoxikation":
+        meds.append(("Naloxon", "0,4 mg i.v.", "Auf 10 ml aufziehen, langsam titrieren"))
+
+    # ---------- LUNGENARTERIENEMBOLIE ----------
+    if erkrankung == "Lungenarterienembolie":
+        meds.append(("Heparin", "5000 I.E. i.v.", ""))
 
     return meds
 
@@ -181,7 +266,23 @@ if st.session_state.admin_access:
     st.sidebar.markdown("---")
     st.sidebar.markdown("#### SOP bearbeiten")
     if "sop_admin" not in st.session_state:
-        st.session_state.sop_admin = {}
+        st.session_state.sop_admin = {
+            "Anaphylaxie": {"Adrenalin": "0,15 mg (<6 J) | 0,3 mg (6–12 J) | 0,5 mg ≥12 J"},
+            "Asthma/COPD": {"Salbutamol": "altersabhängig", "Ipratropiumbromid": "500 µg (>12 J)", "Prednisolon": "100 mg i.v./rektal"},
+            "Hypoglykämie": {"Glukose": "bis 16 g i.v. / oral"},
+            "Krampfanfall": {"Midazolam": "0,05 mg/kg"},
+            "Schlaganfall": {"Jonosteril": "RR <120 mmHg", "Urapidil": "5–15 mg i.v."},
+            "Kardiales Lungenödem": {"Nitro": "0,4–0,8 mg sublingual", "Furosemid": "20 mg i.v."},
+            "Hypertensiver Notfall": {"Urapidil": "5–15 mg i.v."},
+            "Starke Schmerzen bei Trauma": {"Paracetamol": "15 mg/kg oder 1 g", "Esketamin": "0,125 mg/kg", "Fentanyl": "0,05 mg alle 4 min, max. 2 µg/kg"},
+            "Brustschmerz ACS": {"ASS": "250 mg i.v.", "Heparin": "5000 I.E. i.v.", "Morphin": "3 mg i.v."},
+            "Abdominelle Schmerzen / Koliken": {"Paracetamol": "15 mg/kg oder 1 g", "Butylscopolamin": "0,3 mg/kg max.40 mg", "Fentanyl": "0,05 mg, max. 2 µg/kg"},
+            "Übelkeit / Erbrechen": {"Ondansetron": "4 mg i.v.", "Dimenhydrinat": "31 mg i.v. + 31 mg Infusion"},
+            "Instabile Bradykardie": {"Adrenalin": "1 mg in 500 ml Jonosteril", "Atropin": "0,5 mg i.v. bis max. 3 mg"},
+            "Benzodiazepin-Intoxikation": {"Flumazenil": "0,5 mg i.v."},
+            "Opiat-Intoxikation": {"Naloxon": "0,4 mg i.v. auf 10 ml"},
+            "Lungenarterienembolie": {"Heparin": "5000 I.E. i.v."}
+        }
     for erk, meds in st.session_state.sop_admin.items():
         st.sidebar.subheader(erk)
         for med, dosis in meds.items():
