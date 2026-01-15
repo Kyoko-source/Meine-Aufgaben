@@ -93,12 +93,15 @@ with st.container():
         st.subheader("🩺 Erkrankung")
         erkrankung_auswahl = st.selectbox("Auswahl", select_options)
         emoji = erkrankung_auswahl[:2]
-        farbe = "#1f4e79"
-        if emoji == "🔴": farbe = "#e74c3c"
-        elif emoji == "🔵": farbe = "#3498db"
-        elif emoji == "🟣": farbe = "#9b59b6"
-        elif emoji == "🟢": farbe = "#2ecc71"
-        st.markdown(f"<h3 class='header' style='background-color:{farbe}'>{erkrankung_auswahl[2:]}</h3>", unsafe_allow_html=True)
+        # Farbcodes für Box (hellere Versionen)
+        farben_box = {
+            "🔴": "#f8d7da",  # hellrot
+            "🔵": "#d0ebff",  # hellblau
+            "🟣": "#e6d0f5",  # helllila
+            "🟢": "#d4edda"   # hellgrün
+        }
+        farbe = farben_box.get(emoji, "#d0d0d0")
+        st.markdown(f"<h3 class='header' style='background-color:{farbe}; color:black;'>{erkrankung_auswahl[2:]}</h3>", unsafe_allow_html=True)
         erkrankung = erkrankung_auswahl[2:]
 
         blutdruck = None
@@ -150,7 +153,7 @@ def berechne():
             meds.append(("Adrenalin", "2 mg + 2 ml NaCl vernebelt", "Kinder <4 J"))
             meds.append(("Prednisolon", "100 mg rektal", "Kinder <4 J"))
 
-    # Weitere Erkrankungen hier einfügen wie zuvor (Krampfanfall, Hypoglykämie, Trauma etc.)
+    # Hier die restlichen Erkrankungen wie zuvor einfügen
     return meds
 
 # ================== AUSGABE ==================
