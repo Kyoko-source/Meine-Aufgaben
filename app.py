@@ -71,7 +71,8 @@ with st.container():
                 "Brustschmerz ACS",
                 "Abdominelle Schmerzen / Koliken",
                 "Übelkeit / Erbrechen",
-                "Instabile Bradykardie"
+                "Instabile Bradykardie",
+                "Benzodiazepin-Intoxikation"
             ]
         )
 
@@ -111,6 +112,14 @@ with st.container():
 # ================== BERECHNUNG ==================
 def berechne():
     meds = []
+
+    # ---------- BENZODIAZEPIN-INTOXIKATION ----------
+    if erkrankung == "Benzodiazepin-Intoxikation":
+        meds.append((
+            "Flumazenil",
+            "0,5 mg i.v.",
+            "Langsam i.v. applizieren"
+        ))
 
     # ---------- INSTABILE BRADYKARDIE ----------
     if erkrankung == "Instabile Bradykardie":
