@@ -8,25 +8,17 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================== STYLE ==================
+# ================== STYLES ==================
 st.markdown("""
 <style>
 body { background:#edf2f7; font-family:Segoe UI; }
-.card {
-    background:white; padding:25px; border-radius:18px;
-    box-shadow:0 8px 18px rgba(0,0,0,0.08); margin-bottom:20px;
-}
-.med {
-    padding:16px; border-radius:14px; margin-bottom:12px;
-}
+.card { background:white; padding:25px; border-radius:18px; box-shadow:0 8px 18px rgba(0,0,0,0.08); margin-bottom:20px; }
+.med { padding:16px; border-radius:14px; margin-bottom:12px; }
 .green { background:#e8f5e9; border-left:6px solid #43a047; }
 .blue { background:#e3f2fd; border-left:6px solid #1e88e5; }
 .red { background:#ffe5e5; border-left:6px solid #e53935; }
 .orange { background:#fff3e0; border-left:6px solid #fb8c00; }
-.badge {
-    display:inline-block; background:#1f4e79; color:white;
-    padding:4px 10px; border-radius:999px; font-size:0.8em;
-}
+.badge { display:inline-block; background:#1f4e79; color:white; padding:4px 10px; border-radius:999px; font-size:0.8em; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -40,29 +32,20 @@ if "result" not in st.session_state:
 # ================== FORM ==================
 with st.form("med_form"):
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
+    col1, col2 = st.columns(2)
 
-    with c1:
+    with col1:
         alter = st.number_input("Alter (Jahre)", 0, 120, 50)
         gewicht = st.number_input("Gewicht (kg)", 1.0, 200.0, 80.0)
 
-    with c2:
+    with col2:
         erkrankung = st.selectbox("Erkrankung", [
-            "Anaphylaxie",
-            "Asthma/COPD",
-            "Hypoglykämie",
-            "Krampfanfall",
-            "Schlaganfall",
-            "Kardiales Lungenödem",
-            "Hypertensiver Notfall",
-            "Starke Schmerzen bei Trauma",
-            "Brustschmerz ACS",
-            "Abdominelle Schmerzen / Koliken",
-            "Übelkeit / Erbrechen",
-            "Instabile Bradykardie",
-            "Benzodiazepin-Intoxikation",
-            "Opiat-Intoxikation",
-            "Lungenarterienembolie"
+            "Anaphylaxie","Asthma/COPD","Hypoglykämie","Krampfanfall",
+            "Schlaganfall","Kardiales Lungenödem","Hypertensiver Notfall",
+            "Starke Schmerzen bei Trauma","Brustschmerz ACS",
+            "Abdominelle Schmerzen / Koliken","Übelkeit / Erbrechen",
+            "Instabile Bradykardie","Benzodiazepin-Intoxikation",
+            "Opiat-Intoxikation","Lungenarterienembolie"
         ])
 
         blutdruck = atemfrequenz = schmerz = None
@@ -95,63 +78,79 @@ with st.form("med_form"):
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ================== BERECHNUNG ==================
-if submit:
+def berechne_med(gewicht, alter, erkrankung, blutdruck=None, zugang=None,
+                  atemfrequenz=None, schmerz=None, asystolie=None, zusatz_schmerz=None):
     meds = []
 
-    # ---------- ANAPHYLAXIE ----------
+    # --- Anaphylaxie ---
     if erkrankung == "Anaphylaxie":
-        dosis = "0,5 mg i.m." if alter >= 12 else "0,3 mg i.m."
-        meds.append(("Adrenalin", dosis, "red", ""))
+        if alter < 6:
+            meds.append(("Adrenalin", "0,15 mg i.m.", "red", "Kinder <6 J"))
+        elif alter < 12:
+            meds.append(("Adrenalin", "0,3 mg i.m.", "red", "Kinder 6–12 J"))
+        else:
+            meds.append(("Adrenalin", "0,5 mg i.m.", "red", "≥12 J"))
 
-    # ---------- ASTHMA/COPD ----------
+    # --- Asthma/COPD ---
     if erkrankung == "Asthma/COPD":
         meds.append(("Salbutamol", "2,5 mg vernebelt", "green", ""))
+        meds.append(("Ipratropiumbromid", "500 µg vernebelt", "green", ""))
+        meds.append(("Prednisolon", "100 mg i.v.", "green", ""))
 
-    # ---------- HYPOGLYKÄMIE ----------
+    # --- Hypoglykämie ---
     if erkrankung == "Hypoglykämie":
-        meds.append(("Glukose", "bis 16 g i.v.", "green", ""))
+        meds.append(("Glukose", "bis 16 g i.v.", "green", "Langsam i.v."))
 
-    # ---------- KRAMPFANFALL ----------
+    # --- Krampfanfall ---
     if erkrankung == "Krampfanfall":
         if zugang == "Ja":
             meds.append(("Midazolam", f"{0.05*gewicht:.2f} mg i.v.", "blue", "0,05 mg/kg"))
         else:
-            meds.append(("Midazolam", "10 mg bukkal", "blue", ""))
+            if gewicht <= 10:
+                meds.append(("Midazolam", "2,5 mg (0,5 ml)", "blue", ""))
+            elif gewicht <= 20:
+                meds.append(("Midazolam", "5 mg (1 ml)", "blue", ""))
+            else:
+                meds.append(("Midazolam", "10 mg (2 ml)", "blue", ""))
 
-    # ---------- SCHMERZ TRAUMA ----------
+    # --- Starke Schmerzen bei Trauma ---
     if erkrankung == "Starke Schmerzen bei Trauma":
         meds.append(("Paracetamol", f"{15*gewicht:.0f} mg i.v.", "green", "15 mg/kg"))
-
         if zusatz_schmerz == "Midazolam + Esketamin":
             meds.append(("Midazolam", "1 mg i.v.", "blue", ""))
             meds.append(("Esketamin", f"{0.125*gewicht:.2f} mg i.v.", "blue", "0,125 mg/kg"))
-
-        if zusatz_schmerz == "Fentanyl":
-            max_ug = 2 * gewicht
-            gaben = math.floor(max_ug / 50)
+        elif zusatz_schmerz == "Fentanyl":
+            max_ug = 2*gewicht
+            gaben = math.floor(max_ug/50)
             meds.append(("Fentanyl", "0,05 mg i.v. alle 4 min", "red", f"max. {gaben} Gaben"))
 
-    # ---------- ACS ----------
+    # --- ACS ---
     if erkrankung == "Brustschmerz ACS":
         meds.append(("ASS", "250 mg i.v.", "green", ""))
         meds.append(("Heparin", "5000 I.E.", "green", ""))
-        if atemfrequenz and atemfrequenz < 10:
+        if atemfrequenz is not None and atemfrequenz < 10:
             meds.append(("⚠️ WARNUNG", "Atemdepression", "orange", "AF < 10"))
 
-    st.session_state.result = meds
+    # --- TODO: alle anderen Erkrankungen hier analog hinzufügen ---
+    # z.B. Schlaganfall, Lungenödem, Hypertensiver Notfall, Koliken, Übelkeit, Bradykardie, Benzodiazepin, Opiat, Lungenembolie
 
-# ================== OUTPUT ==================
+    return meds
+
+# ================== AUSGABE ==================
+if submit:
+    st.session_state.result = berechne_med(
+        gewicht, alter, erkrankung, blutdruck, zugang, atemfrequenz, schmerz, asystolie, zusatz_schmerz
+    )
+
 if st.session_state.result:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📋 Therapieempfehlung")
-
     for med, dosis, color, info in st.session_state.result:
         st.markdown(
             f"<div class='med {color}'><b>{med}</b><br>{dosis}"
             f"{f'<div class=badge>{info}</div>' if info else ''}</div>",
             unsafe_allow_html=True
         )
-
     st.markdown("</div>", unsafe_allow_html=True)
 
 st.caption("Rettungsdienst – Schulungssimulation | Keine Haftung")
