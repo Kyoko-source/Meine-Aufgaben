@@ -1,6 +1,7 @@
 import streamlit as st
 import math
 from datetime import datetime
+import pytz  # Für Zeitzonen
 
 # ================== CONFIG ==================
 st.set_page_config(
@@ -142,6 +143,8 @@ if erkrankung == "Starke Schmerzen bei Trauma" and gewicht >= 30:
 st.markdown("</div>", unsafe_allow_html=True)
 
 # ================== BERECHNUNG ==================
+tz = pytz.timezone("Europe/Berlin")  # Zeitzone für Protokoll
+
 def berechne_med(gewicht, alter, erkrankung, blutdruck=None, zugang=None,
                   atemfrequenz=None, schmerzskala=None, asystolie=None, zusatz_schmerz=None):
     meds = []
@@ -283,19 +286,19 @@ if erkrankung == "Reanimationsmodus":
     with col1:
         if st.button("💉 Adrenalin"):
             st.session_state.adrenalin += 1
-            st.session_state.log.append(f"{datetime.now().strftime('%H:%M:%S')} - Adrenalin gegeben ({st.session_state.adrenalin}. Gabe)")
+            st.session_state.log.append(f"{datetime.now(tz).strftime('%H:%M:%S')} - Adrenalin gegeben ({st.session_state.adrenalin}. Gabe)")
         st.markdown(f"<div class='med red' style='font-size:1.5em; text-align:center;'><b>Adrenalin</b><br>{st.session_state.adrenalin} Gabe(n)</div>", unsafe_allow_html=True)
 
     with col2:
         if st.button("💊 Amiodaron"):
             st.session_state.amiodaron += 1
-            st.session_state.log.append(f"{datetime.now().strftime('%H:%M:%S')} - Amiodaron gegeben ({st.session_state.amiodaron}. Gabe)")
+            st.session_state.log.append(f"{datetime.now(tz).strftime('%H:%M:%S')} - Amiodaron gegeben ({st.session_state.amiodaron}. Gabe)")
         st.markdown(f"<div class='med blue' style='font-size:1.5em; text-align:center;'><b>Amiodaron</b><br>{st.session_state.amiodaron} Gabe(n)</div>", unsafe_allow_html=True)
 
     with col3:
         if st.button("⚡ Schock"):
             st.session_state.schocks += 1
-            st.session_state.log.append(f"{datetime.now().strftime('%H:%M:%S')} - Schock {st.session_state.schocks} durchgeführt")
+            st.session_state.log.append(f"{datetime.now(tz).strftime('%H:%M:%S')} - Schock {st.session_state.schocks} durchgeführt")
         st.markdown(f"<div class='med orange' style='font-size:1.5em; text-align:center;'><b>Schocks</b><br>{st.session_state.schocks} Mal</div>", unsafe_allow_html=True)
 
     # Protokoll anzeigen
