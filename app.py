@@ -8,7 +8,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================== STYLES ==================
+# ================== STYLE ==================
 st.markdown("""
 <style>
 body { background:#edf2f7; font-family:Segoe UI; }
@@ -19,6 +19,8 @@ body { background:#edf2f7; font-family:Segoe UI; }
 .red { background:#ffe5e5; border-left:6px solid #e53935; }
 .orange { background:#fff3e0; border-left:6px solid #fb8c00; }
 .badge { display:inline-block; background:#1f4e79; color:white; padding:4px 10px; border-radius:999px; font-size:0.8em; }
+.stButton>button { background:linear-gradient(90deg,#4cafef,#1f4e79); color:white; font-weight:bold; padding:12px 26px; border-radius:14px; }
+.stButton>button:hover { transform:scale(1.05); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -34,10 +36,12 @@ with st.form("med_form"):
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
 
+    # --- PATIENT ---
     with col1:
         alter = st.number_input("Alter (Jahre)", 0, 120, 50)
         gewicht = st.number_input("Gewicht (kg)", 1.0, 200.0, 80.0)
 
+    # --- ERKRANKUNG ---
     with col2:
         erkrankung = st.selectbox("Erkrankung", [
             "Anaphylaxie","Asthma/COPD","Hypoglykämie","Krampfanfall",
@@ -48,28 +52,28 @@ with st.form("med_form"):
             "Opiat-Intoxikation","Lungenarterienembolie"
         ])
 
-        blutdruck = atemfrequenz = schmerz = None
+        blutdruck = atemfrequenz = schmerzskala = None
         zugang = asystolie = None
         zusatz_schmerz = None
 
         if erkrankung in ["Schlaganfall","Kardiales Lungenödem","Hypertensiver Notfall"]:
-            blutdruck = st.number_input("Systolischer RR", 50, 300, 140)
+            blutdruck = st.number_input("Systolischer Blutdruck (mmHg)", 50, 300, 140)
 
         if erkrankung == "Krampfanfall":
-            zugang = st.radio("i.v. Zugang?", ["Ja","Nein"])
+            zugang = st.radio("i.v. Zugang vorhanden?", ["Ja","Nein"])
 
         if erkrankung == "Brustschmerz ACS":
-            atemfrequenz = st.number_input("Atemfrequenz", 0, 60, 16)
+            atemfrequenz = st.number_input("Atemfrequenz (/min)", 0, 60, 16)
 
         if erkrankung == "Abdominelle Schmerzen / Koliken":
-            schmerz = st.slider("Schmerzskala", 1, 10, 5)
+            schmerzskala = st.slider("Schmerzskala (1–10)", 1, 10, 5)
 
         if erkrankung == "Instabile Bradykardie":
-            asystolie = st.radio("Asystolie-Gefahr?", ["Ja","Nein"])
+            asystolie = st.radio("Gefahr einer Asystolie?", ["Ja","Nein"])
 
         if erkrankung == "Starke Schmerzen bei Trauma" and gewicht >= 30:
             zusatz_schmerz = st.radio(
-                "Analgetische Zusatzmedikation",
+                "Zusatzmedikation wählen",
                 ["Midazolam + Esketamin", "Fentanyl"],
                 horizontal=True
             )
@@ -79,29 +83,36 @@ with st.form("med_form"):
 
 # ================== BERECHNUNG ==================
 def berechne_med(gewicht, alter, erkrankung, blutdruck=None, zugang=None,
-                  atemfrequenz=None, schmerz=None, asystolie=None, zusatz_schmerz=None):
+                  atemfrequenz=None, schmerzskala=None, asystolie=None, zusatz_schmerz=None):
     meds = []
 
-    # --- Anaphylaxie ---
+    # ---------------------- ANAPHYLAXIE ----------------------
     if erkrankung == "Anaphylaxie":
         if alter < 6:
-            meds.append(("Adrenalin", "0,15 mg i.m.", "red", "Kinder <6 J"))
+            meds.append(("Adrenalin", "0,15 mg i.m.", "red", "Kinder <6 Jahre"))
         elif alter < 12:
-            meds.append(("Adrenalin", "0,3 mg i.m.", "red", "Kinder 6–12 J"))
+            meds.append(("Adrenalin", "0,3 mg i.m.", "red", "Kinder 6–12 Jahre"))
         else:
-            meds.append(("Adrenalin", "0,5 mg i.m.", "red", "≥12 J"))
+            meds.append(("Adrenalin", "0,5 mg i.m.", "red", "Patient ≥12 Jahre"))
 
-    # --- Asthma/COPD ---
+    # ---------------------- ASTHMA/COPD ----------------------
     if erkrankung == "Asthma/COPD":
-        meds.append(("Salbutamol", "2,5 mg vernebelt", "green", ""))
-        meds.append(("Ipratropiumbromid", "500 µg vernebelt", "green", ""))
-        meds.append(("Prednisolon", "100 mg i.v.", "green", ""))
+        if alter > 12:
+            meds.append(("Salbutamol", "2,5 mg vernebelt", "green", "Patient >12 J"))
+            meds.append(("Ipratropiumbromid", "500 µg vernebelt", "green", "Patient >12 J"))
+            meds.append(("Prednisolon", "100 mg i.v.", "green", ""))
+        elif 4 <= alter <= 12:
+            meds.append(("Salbutamol", "1,25 mg vernebelt", "green", "Kinder 4–12 J"))
+            meds.append(("Prednisolon", "100 mg rektal", "green", "Kinder 4–12 J"))
+        else:
+            meds.append(("Adrenalin", "2 mg + 2 ml NaCl vernebelt", "red", "Kinder <4 J"))
+            meds.append(("Prednisolon", "100 mg rektal", "green", "Kinder <4 J"))
 
-    # --- Hypoglykämie ---
+    # ---------------------- HYPOGLYKÄMIE ----------------------
     if erkrankung == "Hypoglykämie":
-        meds.append(("Glukose", "bis 16 g i.v.", "green", "Langsam i.v."))
+        meds.append(("Glukose", "bis 16 g i.v.", "green", "Langsam i.v./oral bei wachem Patienten"))
 
-    # --- Krampfanfall ---
+    # ---------------------- KRAMPFANFALL ----------------------
     if erkrankung == "Krampfanfall":
         if zugang == "Ja":
             meds.append(("Midazolam", f"{0.05*gewicht:.2f} mg i.v.", "blue", "0,05 mg/kg"))
@@ -113,33 +124,93 @@ def berechne_med(gewicht, alter, erkrankung, blutdruck=None, zugang=None,
             else:
                 meds.append(("Midazolam", "10 mg (2 ml)", "blue", ""))
 
-    # --- Starke Schmerzen bei Trauma ---
+    # ---------------------- SCHMERZEN / TRAUMA ----------------------
     if erkrankung == "Starke Schmerzen bei Trauma":
         meds.append(("Paracetamol", f"{15*gewicht:.0f} mg i.v.", "green", "15 mg/kg"))
         if zusatz_schmerz == "Midazolam + Esketamin":
             meds.append(("Midazolam", "1 mg i.v.", "blue", ""))
             meds.append(("Esketamin", f"{0.125*gewicht:.2f} mg i.v.", "blue", "0,125 mg/kg"))
         elif zusatz_schmerz == "Fentanyl":
-            max_ug = 2*gewicht
-            gaben = math.floor(max_ug/50)
-            meds.append(("Fentanyl", "0,05 mg i.v. alle 4 min", "red", f"max. {gaben} Gaben"))
+            dosis_einmal_mg = 0.05
+            dosis_einmal_ug = dosis_einmal_mg*1000
+            max_total_ug = 2*gewicht
+            max_gaben = math.floor(max_total_ug/dosis_einmal_ug)
+            meds.append(("Fentanyl", "0,05 mg i.v. alle 4 min", "red", f"Maximal {max_gaben} Gaben"))
 
-    # --- ACS ---
+    # ---------------------- BRUSTSCHMERZ ACS ----------------------
     if erkrankung == "Brustschmerz ACS":
         meds.append(("ASS", "250 mg i.v.", "green", ""))
-        meds.append(("Heparin", "5000 I.E.", "green", ""))
-        if atemfrequenz is not None and atemfrequenz < 10:
-            meds.append(("⚠️ WARNUNG", "Atemdepression", "orange", "AF < 10"))
+        meds.append(("Heparin", "5000 I.E. i.v.", "green", ""))
+        if atemfrequenz and atemfrequenz < 10:
+            meds.append(("Morphin", "3 mg i.v.", "orange", "AF < 10/min"))
 
-    # --- TODO: alle anderen Erkrankungen hier analog hinzufügen ---
-    # z.B. Schlaganfall, Lungenödem, Hypertensiver Notfall, Koliken, Übelkeit, Bradykardie, Benzodiazepin, Opiat, Lungenembolie
+    # ---------------------- Weitere Erkrankungen ----------------------
+    # Schlaganfall
+    if erkrankung == "Schlaganfall":
+        if blutdruck and blutdruck < 120:
+            meds.append(("Jonosteril", "", "green", "RR <120 mmHg"))
+        elif blutdruck and blutdruck > 220:
+            meds.append(("Urapidil", "5–15 mg i.v.", "red", "RR >220 mmHg"))
+
+    # Kardiales Lungenödem
+    if erkrankung == "Kardiales Lungenödem":
+        meds.append(("Furosemid", "20 mg i.v.", "green", ""))
+        if blutdruck and blutdruck > 120:
+            meds.append(("Nitro", "0,4–0,8 mg sublingual", "green", "RR >120 mmHg"))
+
+    # Hypertensiver Notfall
+    if erkrankung == "Hypertensiver Notfall" and blutdruck:
+        ziel = int(blutdruck*0.8)
+        meds.append(("Urapidil", "5–15 mg langsam i.v.", "red", f"Ziel-Sys ≈ {ziel} mmHg"))
+
+    # Abdominelle Schmerzen / Koliken
+    if erkrankung == "Abdominelle Schmerzen / Koliken":
+        if 3 <= schmerzskala <=5 and gewicht >= 30:
+            dosis = 15*gewicht if gewicht<=50 else 1000
+            meds.append(("Paracetamol", f"{dosis:.0f} mg i.v.", "green", ""))
+        if 6 <= schmerzskala <=10:
+            dosis = min(0.3*gewicht, 40)
+            meds.append(("Butylscopolamin", f"{dosis:.2f} mg i.v.", "green", "max. 40 mg"))
+            if gewicht >= 30:
+                dosis_einmal_mg = 0.05
+                dosis_einmal_ug = dosis_einmal_mg*1000
+                max_total_ug = 2*gewicht
+                max_gaben = math.floor(max_total_ug/dosis_einmal_ug)
+                meds.append(("Fentanyl", f"0,05 mg i.v.", "red", f"Maximal {max_gaben} Gaben"))
+
+    # Übelkeit / Erbrechen
+    if erkrankung == "Übelkeit / Erbrechen":
+        if alter >= 60:
+            meds.append(("Ondansetron", "4 mg i.v.", "green", "Einmalig"))
+        else:
+            meds.append(("Dimenhydrinat", "31 mg i.v.", "green", "Zusätzlich 31 mg Infusion"))
+
+    # Instabile Bradykardie
+    if erkrankung == "Instabile Bradykardie":
+        if asystolie == "Ja":
+            meds.append(("Adrenalin-Infusion", "1 mg in 500 ml Jonosteril", "red", "1 Tropfen/Sekunde"))
+        else:
+            meds.append(("Atropin", "0,5 mg i.v.", "green", "Bis max. 3 mg"))
+
+    # Benzodiazepin-Intoxikation
+    if erkrankung == "Benzodiazepin-Intoxikation":
+        meds.append(("Flumazenil", "0,5 mg i.v.", "green", "Langsam i.v."))
+
+    # Opiat-Intoxikation
+    if erkrankung == "Opiat-Intoxikation":
+        meds.append(("Naloxon", "0,4 mg i.v.", "red", "Langsam titrieren"))
+
+    # Lungenarterienembolie
+    if erkrankung == "Lungenarterienembolie":
+        meds.append(("Heparin", "5000 I.E. i.v.", "green", ""))
 
     return meds
 
 # ================== AUSGABE ==================
 if submit:
     st.session_state.result = berechne_med(
-        gewicht, alter, erkrankung, blutdruck, zugang, atemfrequenz, schmerz, asystolie, zusatz_schmerz
+        gewicht, alter, erkrankung, blutdruck, zugang, atemfrequenz,
+        schmerzskala, asystolie, zusatz_schmerz
     )
 
 if st.session_state.result:
