@@ -1,5 +1,6 @@
 import streamlit as st
 import math
+from datetime import datetime
 
 # ================== CONFIG ==================
 st.set_page_config(
@@ -87,10 +88,10 @@ st.warning("⚠️ Ausschließlich für Schulung / Simulation – keine reale An
 if "result" not in st.session_state:
     st.session_state.result = None
 
-# Reanimationsmodus Zähler
-for key in ["adrenalin", "amiodaron", "schocks"]:
+# Reanimationsmodus Zähler initialisieren
+for key in ["adrenalin", "amiodaron", "schocks", "log"]:
     if key not in st.session_state:
-        st.session_state[key] = 0
+        st.session_state[key] = 0 if key != "log" else []
 
 # ================== PATIENT & ERKRANKUNG ==================
 st.markdown("<div class='card'>", unsafe_allow_html=True)
@@ -265,32 +266,44 @@ def berechne_med(gewicht, alter, erkrankung, blutdruck=None, zugang=None,
 
     return meds
 
-# ================== REANIMATIONS MODUS INTERAKTIV ==================
+# ================== REANIMATIONS MODUS INTERAKTIV MIT PROTOKOLL ==================
 if erkrankung == "Reanimationsmodus":
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("🛠 Reanimationsmodus – Aktionen")
 
+    # Reset-Button
     if st.button("🔄 Reset Zähler"):
         st.session_state.adrenalin = 0
         st.session_state.amiodaron = 0
         st.session_state.schocks = 0
+        st.session_state.log = []
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
         if st.button("💉 Adrenalin"):
             st.session_state.adrenalin += 1
+            st.session_state.log.append(f"{datetime.now().strftime('%H:%M:%S')} - Adrenalin gegeben ({st.session_state.adrenalin}. Gabe)")
         st.markdown(f"<div class='med red' style='font-size:1.5em; text-align:center;'><b>Adrenalin</b><br>{st.session_state.adrenalin} Gabe(n)</div>", unsafe_allow_html=True)
 
     with col2:
         if st.button("💊 Amiodaron"):
             st.session_state.amiodaron += 1
+            st.session_state.log.append(f"{datetime.now().strftime('%H:%M:%S')} - Amiodaron gegeben ({st.session_state.amiodaron}. Gabe)")
         st.markdown(f"<div class='med blue' style='font-size:1.5em; text-align:center;'><b>Amiodaron</b><br>{st.session_state.amiodaron} Gabe(n)</div>", unsafe_allow_html=True)
 
     with col3:
         if st.button("⚡ Schock"):
             st.session_state.schocks += 1
+            st.session_state.log.append(f"{datetime.now().strftime('%H:%M:%S')} - Schock {st.session_state.schocks} durchgeführt")
         st.markdown(f"<div class='med orange' style='font-size:1.5em; text-align:center;'><b>Schocks</b><br>{st.session_state.schocks} Mal</div>", unsafe_allow_html=True)
+
+    # Protokoll anzeigen
+    if st.session_state.log:
+        st.markdown("<hr>", unsafe_allow_html=True)
+        st.subheader("📝 Reanimationsprotokoll")
+        for entry in st.session_state.log:
+            st.markdown(f"- {entry}")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
