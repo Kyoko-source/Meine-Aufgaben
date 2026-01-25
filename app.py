@@ -257,6 +257,60 @@ if st.button("💉 Dosierung berechnen"):
         schmerzskala, asystolie, zusatz_schmerz
     )
 
+# ================== DYNAMISCHE MEDIKAMENTE REA ==================
+
+# Session State
+if "rea_meds_given" not in st.session_state:
+    st.session_state.rea_meds_given = []
+
+# Medikamentenlogik abhängig vom Fortschritt Helfer 2
+def get_rea_meds(step_h2):
+    meds = []
+
+    if step_h2 >= 1:
+        meds.append(("Adrenalin", "1 mg i.v./i.o.", "alle 3–5 Min"))
+
+    if step_h2 >= 3:
+        meds.append(("Amiodaron", "300 mg i.v.", "nach 3. Schock"))
+
+    if step_h2 >= 4:
+        meds.append(("Adrenalin", "1 mg i.v./i.o.", "wiederholen"))
+
+    return meds
+
+
+# ================== MEDIKAMENTE IM REA-MODUS ==================
+if st.session_state.get("rea_mode", False):
+
+    meds = get_rea_meds(st.session_state.rea_step_h2)
+
+    if meds:
+        st.markdown("### 💉 Medikamente – Helfer 1")
+
+        for med, dosis, info in meds:
+            med_key = f"{med}_{dosis}"
+
+            col_m1, col_m2 = st.columns([3, 1])
+
+            with col_m1:
+                st.markdown(
+                    f"""
+                    <div class='med red'>
+                        <b>{med}</b><br>
+                        {dosis}
+                        <div class='badge'>{info}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+
+            with col_m2:
+                if med_key not in st.session_state.rea_meds_given:
+                    if st.button("Geben", key=med_key):
+                        st.session_state.rea_meds_given.append(med_key)
+                else:
+                    st.success("✔ gegeben")
+
 # ================== AUSGABE ==================
 if st.session_state.result:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
@@ -270,3 +324,4 @@ if st.session_state.result:
     st.markdown("</div>", unsafe_allow_html=True)
 
 st.caption("Rettungsdienst – Schulungssimulation | Keine Haftung")
+
