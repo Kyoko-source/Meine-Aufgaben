@@ -11,19 +11,80 @@ st.set_page_config(
 # ================== STYLE ==================
 st.markdown("""
 <style>
-body { background:#edf2f7; font-family:Segoe UI; }
-.card { background:white; padding:25px; border-radius:18px; box-shadow:0 8px 18px rgba(0,0,0,0.08); margin-bottom:20px; }
-.med { padding:16px; border-radius:14px; margin-bottom:12px; }
+/* BODY & FONTS */
+body {
+    background: #f4f7fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #1f2937;
+}
+
+/* CARD */
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+    margin-bottom: 25px;
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-3px);
+}
+
+/* MEDICATION ENTRY */
+.med {
+    padding: 18px 20px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    font-size: 0.95em;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.med:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+/* COLORS */
 .green { background:#e8f5e9; border-left:6px solid #43a047; }
 .blue { background:#e3f2fd; border-left:6px solid #1e88e5; }
 .red { background:#ffe5e5; border-left:6px solid #e53935; }
 .orange { background:#fff3e0; border-left:6px solid #fb8c00; }
-.badge { display:inline-block; background:#1f4e79; color:white; padding:4px 10px; border-radius:999px; font-size:0.8em; }
-.stButton>button { background:linear-gradient(90deg,#4cafef,#1f4e79); color:white; font-weight:bold; padding:12px 26px; border-radius:14px; }
-.stButton>button:hover { transform:scale(1.05); }
+
+/* BADGES */
+.badge {
+    display:inline-block;
+    background: #1f4e79;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.8em;
+    margin-top: 6px;
+}
+
+/* BUTTON */
+.stButton>button {
+    background: linear-gradient(135deg,#4cafef,#1f4e79);
+    color:white;
+    font-weight:bold;
+    padding:14px 28px;
+    border-radius:18px;
+    font-size:1em;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.stButton>button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+/* TITLE & WARNING */
+h1, .stWarning {
+    font-weight: 600;
+}
 </style>
 """, unsafe_allow_html=True)
 
+# ================== TITLE & WARNING ==================
 st.title("💊 Medikamentendosierung – Schulungszwecke")
 st.warning("⚠️ Ausschließlich für Schulung / Simulation – keine reale Anwendung!")
 
@@ -39,7 +100,7 @@ with st.form("med_form"):
     # --- PATIENT ---
     with col1:
         alter = st.number_input("Alter (Jahre)", 0, 120, 50)
-        gewicht = st.number_input("Gewicht (kg)", 1.0, 200.0, 80.0)
+        gewicht = st.number_input("Gewicht (kg)", 1.0, 200.0, 80.0, step=0.1)
 
     # --- ERKRANKUNG ---
     with col2:
