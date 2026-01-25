@@ -279,16 +279,75 @@ def get_rea_meds(step_h2):
     return meds
 
 
-# ================== MEDIKAMENTE IM REA-MODUS ==================
-if st.session_state.get("rea_mode", False):
+# ================== REANIMATIONSMODUS – ERWEITERT ==================
+import time
 
-    meds = get_rea_meds(st.session_state.rea_step_h2)
+# ---------- Session State ----------
+defaults = {
+    "rea_mode": False,
+    "rea_step_h2": 0,
+    "rea_shocks": 0,
+    "rea_meds_given": [],
+    "rea_last_adrenalin": None
+}
+for k, v in defaults.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
 
-    if meds:
-        st.markdown("### 💉 Medikamente – Helfer 1")
+# ---------- Aktivierung ----------
+if st.button("🫀 Reanimations-Modus"):
+    st.session_state.rea_mode = True
+    st.session_state.rea_step_h2 = 0
+    st.session_state.rea_shocks = 0
+    st.session_state.rea_meds_given = []
+    st.session_state.rea_last_adrenalin = None
+
+# ---------- Medikamentenlogik ----------
+def get_rea_meds(shocks):
+    meds = []
+
+    # Adrenalin immer ab Schock 1
+    meds.append(("Adrenalin", "1 mg i.v./i.o.", "alle 3–5 Min"))
+
+    # Amiodaron nach 3. Schock
+    if shocks >= 3:
+        meds.append(("Amiodaron", "300 mg i.v.", "nach 3. Schock"))
+
+    return meds
+
+
+# ================== REA UI ==================
+if st.session_state.rea_mode:
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("🫀 Reanimations-Modus")
+
+    col1, col2 = st.columns(2)
+
+    # ---------- HELFER 2 ----------
+    with col1:
+        st.markdown("### 👤 Helfer 2 – CPR / Defi")
+        st.info(
+            f"""
+            **Schock-Zähler:** {st.session_state.rea_shocks}  
+            **CPR-Zyklus:** {st.session_state.rea_step_h2 + 1}
+            """
+        )
+
+        if st.button("⚡ Schock durchgeführt"):
+            st.session_state.rea_shocks += 1
+            st.session_state.rea_step_h2 += 1
+
+        if st.button("🔄 CPR 2-Min-Zyklus beendet"):
+            st.session_state.rea_step_h2 += 1
+
+    # ---------- HELFER 1 ----------
+    with col2:
+        st.markdown("### 💉 Helfer 1 – Medikamente")
+
+        meds = get_rea_meds(st.session_state.rea_shocks)
 
         for med, dosis, info in meds:
-            med_key = f"{med}_{dosis}"
+            key = f"{med}_{dosis}"
 
             col_m1, col_m2 = st.columns([3, 1])
 
@@ -305,11 +364,24 @@ if st.session_state.get("rea_mode", False):
                 )
 
             with col_m2:
-                if med_key not in st.session_state.rea_meds_given:
-                    if st.button("Geben", key=med_key):
-                        st.session_state.rea_meds_given.append(med_key)
+                if key not in st.session_state.rea_meds_given:
+                    if st.button("Geben", key=key):
+                        st.session_state.rea_meds_given.append(key)
+                        if med == "Adrenalin":
+                            st.session_state.rea_last_adrenalin = time.time()
                 else:
                     st.success("✔ gegeben")
+
+        # ---------- Adrenalin-Timer ----------
+        if st.session_state.rea_last_adrenalin:
+            elapsed = int((time.time() - st.session_state.rea_last_adrenalin) / 60)
+            if elapsed >= 3:
+                st.error("⏱️ Adrenalin fällig!")
+            else:
+                st.info(f"⏱️ Letztes Adrenalin vor {elapsed} Min")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
 
 # ================== AUSGABE ==================
 if st.session_state.result:
@@ -324,4 +396,5 @@ if st.session_state.result:
     st.markdown("</div>", unsafe_allow_html=True)
 
 st.caption("Rettungsdienst – Schulungssimulation | Keine Haftung")
+
 
